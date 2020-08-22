@@ -1,10 +1,13 @@
-const maybank = require("./banks/maybank");
+// const maybank = require("./banks/maybank");
+const Maybank = require('./banks/maybank');
 const bsn = require('./banks/bsn');
 
-const main = () => {
-
-  maybank("YSCE1234", "Live1313.", "50");
-  // bsn("jiasong88", 'Qwer1122@', '50');
+const main = async () => {
+  const maybank = new Maybank('YSCE1234', 'Live1313.', '50');
+  await maybank.init();
+  await maybank.login();
+  await maybank.transfer();
+  await maybank.fillTac('123456');
 };
 
 main();
