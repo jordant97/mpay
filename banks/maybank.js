@@ -6,7 +6,7 @@ const maybank = async (username, password, amount) => {
     let startTime = Date.now();
 
     let browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
     });
 
     let page = await browser.newPage();
@@ -152,6 +152,12 @@ const maybank = async (username, password, amount) => {
       "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-4.col-xs-12 > div > div.hidden-xs > div > div > ul > li:nth-child(2) > a"
     );
 
+    await _puppeteer.click(page, '', '#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-3.col-xs-12 > button');
+
+    let smsTacInput = await page.waitForSelector('#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---input-wrapper---3ddmb > input');
+
+    smsTacInput.type('123456', { delay: 50 });
+
     let endTime = Date.now();
 
     console.log((endTime - startTime) / 1000);
@@ -161,5 +167,51 @@ const maybank = async (username, password, amount) => {
     console.log(e);
   }
 };
+
+class Maybank {
+  constructor(username, password, amount) {
+    this.username = username;
+    this.password = password;
+    this.amount = amount;
+
+    this.init();
+  }
+
+  async init() {
+    this.browser = await puppeteer.launch({
+      headless: false,
+    });
+
+    this.page = await this.browser.newPage();
+
+    const headlessUserAgent = await this.page.evaluate(() => navigator.userAgent);
+    const chromeUserAgent = headlessUserAgent.replace(
+      "HeadlessChrome",
+      "Chrome"
+    );
+    await this.page.setUserAgent(chromeUserAgent);
+    await this.page.setExtraHTTPHeaders({
+      "accept-language": "en-US,en;q=0.8",
+    });
+
+    await this.page.setRequestInterception(true);
+
+    this.page.on("request", (req) => {
+      if (
+        req.resourceType() == "stylesheet" ||
+        req.resourceType() == "font" ||
+        req.resourceType() == "image"
+      ) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+  }
+
+  login() {
+
+  }
+}
 
 module.exports = maybank;
