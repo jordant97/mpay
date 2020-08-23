@@ -3,49 +3,67 @@ const _puppeteer = require("../helper");
 
 class Maybank {
 
-  constructor(username, password, amount) {
-    this.username = username;
-    this.password = password;
+  constructor(amount) {
     this.amount = amount;
   }
 
   async init() {
-    this.browser = await puppeteer.launch({
-      headless: false,
-    });
 
-    this.page = await this.browser.newPage();
+    try {
+      this.browser = await puppeteer.launch({
+        headless: false,
+      });
 
-    const headlessUserAgent = await this.page.evaluate(() => navigator.userAgent);
-    const chromeUserAgent = headlessUserAgent.replace(
-      "HeadlessChrome",
-      "Chrome"
-    );
-    await this.page.setUserAgent(chromeUserAgent);
-    await this.page.setExtraHTTPHeaders({
-      "accept-language": "en-US,en;q=0.8",
-    });
+      this.page = await this.browser.newPage();
 
-    await this.page.setRequestInterception(true);
+      const headlessUserAgent = await this.page.evaluate(() => navigator.userAgent);
+      const chromeUserAgent = headlessUserAgent.replace(
+        "HeadlessChrome",
+        "Chrome"
+      );
+      await this.page.setUserAgent(chromeUserAgent);
+      await this.page.setExtraHTTPHeaders({
+        "accept-language": "en-US,en;q=0.8",
+      });
 
-    this.page.on("request", (req) => {
-      if (
-        req.resourceType() == "stylesheet" ||
-        req.resourceType() == "font" ||
-        req.resourceType() == "image"
-      ) {
-        req.abort();
-      } else {
-        req.continue();
-      }
-    });
+      await this.page.setRequestInterception(true);
 
-    await this.page.goto("https://maybank2u.com.my");
+      this.page.on("request", (req) => {
+        if (
+          req.resourceType() == "stylesheet" ||
+          req.resourceType() == "font" ||
+          req.resourceType() == "image"
+        ) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
+
+      await this.page.goto("https://maybank2u.com.my");
+      this.start = Date.now();
+
+      // try {
+      //   let timer = setInterval(() => {
+      //     let end = Date.now();
+      //     if (end - this.start >= 10000) {
+      //       console.log("Timeout Error");
+      //       // throw new Error("Timeout Error");
+      //       clearInterval(timer);
+      //     };
+      //   }, 1000);
+      // } catch (e) {
+      //   console.log(e);
+      //   throw e;
+      // }
+    } catch (e) {
+      throw e;
+    }
   }
 
-  async login() {
+  async login(username, password) {
     let usernameInput = await this.page.waitForSelector("#username");
-    await usernameInput.type(this.username, { delay: 50 });
+    await usernameInput.type(username, { delay: 50 });
 
     await this.page.waitFor(500);
 
@@ -68,7 +86,7 @@ class Maybank {
     );
 
     let passwordInput = await this.page.waitForSelector("#badge", { visible: true });
-    await passwordInput.type(this.password, { delay: 50 });
+    await passwordInput.type(password, { delay: 50 });
 
     await _puppeteer.click(
       this.page,
@@ -148,6 +166,16 @@ class Maybank {
     await _puppeteer.click(this.page,
       'Request TAC',
       '#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-3.col-xs-12 > button');
+  }
+
+  async resendTac() {
+    // smsTacInput
+    await this.page.waitForSelector('#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---input-wrapper---3ddmb > input');
+
+    await _puppeteer.click(this.page,
+      'Resend TAC',
+      '#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > a > span'
+    );
   }
 
   async fillTac(tac) {
