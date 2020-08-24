@@ -2,9 +2,12 @@ const express = require('express');
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require('uuid');
-
 const Maybank = require('./banks/maybank');
 const Public = require('./banks/public');
+const Cimb = require('./banks/cimb');
+const Bsn = require('./banks/bsn');
+const Rhb = require('./banks/rhb');
+const HongLeong = require('./banks/hongleong');
 const session = {};
 
 const app = express();
@@ -18,28 +21,40 @@ const mapBankToClass = (bank, amount) => {
       return new Maybank(amount);
     case "pbb":
       return new Public(amount);
+    case "cimb":
+      return new Cimb(amount);
+    case "bsn":
+      return new Bsn(amount);
     default:
       return {};
   }
 }
 
 app.get('/new', async (req, res) => {
-  let id = uuidv4();
-  let { bank, amount } = req.body;
+  try {
+    let id = uuidv4();
+    let { bank, amount } = req.body;
 
-  session[id] = {
-    bank: mapBankToClass(bank, amount),
+    session[id] = {
+      bank: mapBankToClass(bank, amount),
+    }
+
+    await session[id].bank.init();
+
+    console.log(session);
+
+    res.json({
+      id,
+      bank,
+      amount,
+    });
+  } catch (e) {
+    res.json({
+      code: 404,
+      msg: 'Cant load website'
+    });
   }
 
-  await session[id].bank.init();
-
-  console.log(session);
-
-  res.json({
-    id,
-    bank,
-    amount,
-  });
 });
 
 app.post('/authenticate', async (req, res) => {
@@ -56,7 +71,7 @@ app.post('/authenticate', async (req, res) => {
   } catch (e) {
     res.json({
       code: 400,
-      msg: e
+      msg: `Authenticate Error: ${e}`
     });
   }
 });
@@ -76,7 +91,7 @@ app.post('/tac', async (req, res) => {
   } catch (e) {
     res.json({
       code: 400,
-      msg: e
+      msg: `TAC Error: ${e}`
     })
   }
 });
@@ -98,6 +113,8 @@ app.post('/resendTac', async (req, res) => {
     });
   }
 });
+
+
 
 app.listen(8888, () => {
   console.log("The server is listening on PORT: 8888");
