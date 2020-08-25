@@ -1,13 +1,13 @@
-const express = require('express');
+const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { v4: uuidv4 } = require('uuid');
-const Maybank = require('./banks/maybank');
-const Public = require('./banks/public');
-const Cimb = require('./banks/cimb');
-const Bsn = require('./banks/bsn');
-const Rhb = require('./banks/rhb');
-const HongLeong = require('./banks/hongleong');
+const { v4: uuidv4 } = require("uuid");
+const Maybank = require("./banks/maybank");
+const Public = require("./banks/public");
+const Cimb = require("./banks/cimb");
+const Bsn = require("./banks/bsn");
+const Rhb = require("./banks/rhb");
+const HongLeong = require("./banks/hongleong");
 const session = {};
 
 const app = express();
@@ -28,16 +28,16 @@ const mapBankToClass = (bank, amount) => {
     default:
       return {};
   }
-}
+};
 
-app.get('/new', async (req, res) => {
+app.get("/new", async (req, res) => {
   try {
     let id = uuidv4();
     let { bank, amount } = req.body;
 
     session[id] = {
       bank: mapBankToClass(bank, amount),
-    }
+    };
 
     await session[id].bank.init();
 
@@ -51,13 +51,12 @@ app.get('/new', async (req, res) => {
   } catch (e) {
     res.json({
       code: 404,
-      msg: 'Cant load website'
+      msg: "Cant load website",
     });
   }
-
 });
 
-app.post('/authenticate', async (req, res) => {
+app.post("/authenticate", async (req, res) => {
   try {
     let { id, username, password } = req.body;
 
@@ -66,17 +65,17 @@ app.post('/authenticate', async (req, res) => {
 
     res.json({
       code: 200,
-      msg: 'Successfully request TAC'
+      msg: "Successfully request TAC",
     });
   } catch (e) {
     res.json({
       code: 400,
-      msg: `Authenticate Error: ${e}`
+      msg: `Authenticate Error: ${e}`,
     });
   }
 });
 
-app.post('/tac', async (req, res) => {
+app.post("/tac", async (req, res) => {
   try {
     let { id, tac } = req.body;
 
@@ -84,19 +83,18 @@ app.post('/tac', async (req, res) => {
 
     res.json({
       code: 200,
-      msg: '',
-      amount: session[id].bank.amount
+      msg: "",
+      amount: session[id].bank.amount,
     });
-
   } catch (e) {
     res.json({
       code: 400,
-      msg: `TAC Error: ${e}`
-    })
+      msg: `TAC Error: ${e}`,
+    });
   }
 });
 
-app.post('/resendTac', async (req, res) => {
+app.post("/resendTac", async (req, res) => {
   try {
     let { id } = req.body;
 
@@ -104,19 +102,34 @@ app.post('/resendTac', async (req, res) => {
 
     res.json({
       code: 200,
-      msg: 'Successfully request TAC'
+      msg: "Successfully request TAC",
     });
   } catch (e) {
     res.json({
       code: 400,
-      msg: e
+      msg: e,
     });
   }
 });
 
+app.post("/retry", async (req, res) => {
+  try {
+    let { id } = req.body;
 
+    await session[id].bank.retry();
+
+    res.json({
+      code: 200,
+      msg: "Retry",
+    });
+  } catch (e) {
+    res.json({
+      code: 400,
+      msg: e,
+    });
+  }
+});
 
 app.listen(8888, () => {
   console.log("The server is listening on PORT: 8888");
 });
-

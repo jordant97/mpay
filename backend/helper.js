@@ -21,6 +21,21 @@ async function retry(promiseFactory, retryCount) {
   }
 }
 
+async function errorAppear(page, selector) {
+  return new Promise((resolve, reject) => {
+    page
+      .waitFor(selector, {
+        timeout: 0,
+      })
+      .then(() => {
+        reject(new Error("Error Appear"));
+      })
+      .catch(() => {
+        resolve("No error");
+      });
+  });
+}
+
 /*
 Code Sample
 
@@ -44,4 +59,5 @@ await retry(
 module.exports = {
   click,
   retry,
+  errorAppear,
 };
