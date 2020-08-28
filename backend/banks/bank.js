@@ -1,7 +1,8 @@
 class Bank {
-  constructor(browser, page, link, amount) {
-    this.browser = browser;
-    this.page = page;
+  constructor({ link, amount }) {
+    this.id;
+    this.browser;
+    this.page;
     this.link = link;
     this.amount = amount;
   }
@@ -10,18 +11,19 @@ class Bank {
     try {
       await this.page.goto(this.link);
     } catch (e) {
-      throw `Maybank GoTo: ${e.stack}`;
+      throw e;
     }
   }
 
-  async click(page, name, selector) {
+  async click(name, selector) {
     try {
-      await page.waitForSelector(selector);
-      await page.waitFor(200);
-      await page.evaluate((selector) => {
+      await this.page.waitFor(200);
+      await this.page.waitForSelector(selector);
+      await this.page.waitFor(200);
+      await this.page.evaluate((selector) => {
         document.querySelector(selector).click();
       }, selector);
-      await page.waitFor(500);
+      await this.page.waitFor(500);
     } catch (e) {
       throw Error(`${name}: ${e}`);
     }
@@ -38,9 +40,9 @@ class Bank {
     }
   }
 
-  async errorAppear(page, selector) {
+  async errorAppear(selector) {
     return new Promise((resolve, reject) => {
-      page
+      this.page
         .waitFor(selector, {
           timeout: 0,
         })
@@ -65,8 +67,12 @@ class Bank {
   }
 
   async close() {
-    await this.browser.close();
+    try {
+      await this.browser.close();
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
-export default Bank;
+module.exports = Bank;

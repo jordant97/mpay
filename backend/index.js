@@ -10,7 +10,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const timeout = 180;
+const timeout = 560;
 
 const mapBankToClass = (bank, amount) => {
   switch (bank.toLowerCase()) {
@@ -41,6 +41,7 @@ const timer = () => {
         let _s = session[key];
         let timeSince = Math.round((now - _s.bank.start) / 1000);
 
+        console.log(timeSince, session);
         if (timeSince > timeout + 10) {
           _s.bank.close();
           delete session[key];
@@ -84,7 +85,7 @@ app.post("/username", async (req, res) => {
     let { id, username } = req.body;
 
     let result = await session[id].bank.fillUsername(username);
-    console.log(result);
+    console.log(`Result: ${result}`);
     res.json({
       code: 200,
       msg: "Successfully fill username",
@@ -123,13 +124,25 @@ app.post("/tac", async (req, res) => {
   try {
     let { id, tac } = req.body;
 
-    await session[id].bank.fillTac(tac);
+    let result = await session[id].bank.fillTac(tac);
 
-    res.json({
-      code: 200,
-      msg: "Transfer Successfully",
-      amount: session[id].bank.amount,
-    });
+    if (result.toUpperCase() == "TRANSACTION UNSUCCESSFUL") {
+      console.log("Fail");
+
+      res.json({
+        code: 300,
+        msg: "Transfer Unsuccessful",
+        amount: session[id].bank.amount,
+      });
+    } else {
+      console.log("Success");
+
+      res.json({
+        code: 200,
+        msg: "Transfer Successfully",
+        amount: session[id].bank.amount,
+      });
+    }
   } catch (e) {
     res.json({
       code: 400,

@@ -1,21 +1,24 @@
 const puppeteer = require("puppeteer");
-const _puppeteer = require("../helper");
-const e = require("express");
+const Bank = require("./bank");
+const { bankAccNumber } = require("../credentials");
 
-class Maybank {
+class Maybank extends Bank {
   constructor(amount) {
-    this.amount = amount;
-    this.link = "https://maybank2u.com.my";
+    super({
+      amount: amount,
+      link: "https://maybank2u.com.my",
+    });
   }
 
   async init(id) {
     try {
-      this.browser = await puppeteer.launch({
+      super.id = id;
+      super.browser = await puppeteer.launch({
         headless: false,
         slowMo: 50,
       });
 
-      this.page = await this.browser.newPage({ context: id });
+      super.page = await this.browser.newPage({ context: id });
 
       const headlessUserAgent = await this.page.evaluate(
         () => navigator.userAgent
@@ -43,19 +46,15 @@ class Maybank {
         }
       });
 
-      await this.goTo();
+      try {
+        await this.goTo();
+      } catch (e) {
+        console.log(`Session: ${id} closed`);
+      }
 
       this.start = Date.now();
     } catch (e) {
-      throw `Maybank Init: ${e.stack}`;
-    }
-  }
-
-  async goTo() {
-    try {
-      await this.page.goto(this.link);
-    } catch (e) {
-      throw `Maybank GoTo: ${e.stack}`;
+      throw e;
     }
   }
 
@@ -66,8 +65,7 @@ class Maybank {
 
       await this.page.waitFor(500);
 
-      await _puppeteer.click(
-        this.page,
+      await this.click(
         "Login Button One",
         "#root > div > div > div.Header---container---kBsDt > div.col-md-12 > div > div > div > div:nth-child(2) > div > div > div > div > div:nth-child(3) > button"
       );
@@ -78,19 +76,17 @@ class Maybank {
         { visible: true }
       );
 
-      await _puppeteer.click(
-        this.page,
+      await this.click(
         "Modal Yes Button",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-6.col-md-6.col-sm-6.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
     }
 
     try {
-      await _puppeteer.checkExists(this.browser);
+      await this.checkExists(this.browser);
       return await Promise.race([
         successful.call(this),
-        _puppeteer.errorAppear(
-          this.page,
+        this.errorAppear(
           "#root > div > div > div.notifications-wrapper > div > div"
         ),
       ]);
@@ -108,8 +104,7 @@ class Maybank {
       });
       await passwordInput.type(password);
 
-      await _puppeteer.click(
-        this.page,
+      await this.click(
         "Login Button 2",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-5.col-md-5.col-sm-5.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
@@ -120,8 +115,7 @@ class Maybank {
     try {
       await Promise.race([
         successful.call(this),
-        _puppeteer.errorAppear(
-          this.page,
+        this.errorAppear(
           "#root > div > div > div.notifications-wrapper > div > div"
         ),
       ]);
@@ -154,6 +148,11 @@ class Maybank {
       ).catch((e) => console.log(e));
 
       await this.click(
+        "Other Accounts Select Item",
+        "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(2) > div.hidden-xs.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > div > ul > li:nth-child(2) > a"
+      ).catch((e) => console.log(e));
+
+      await this.click(
         "Maybank / Maybank Islamic",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(3) > div.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > ul > li:nth-child(1) > a"
       ).catch((e) => console.log(e));
@@ -167,7 +166,7 @@ class Maybank {
       let accountNumber = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(1) > div > div.col-sm-7 > input"
       );
-      await accountNumber.type("114161093646");
+      await accountNumber.type(bankAccNumber);
 
       let transferAmount = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(2) > div > div.col-sm-7 > input"
@@ -177,7 +176,7 @@ class Maybank {
       let reference = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(4) > div > div > div.col-sm-7 > input"
       );
-      await reference.type("ReferenceNumber");
+      await reference.type(this.id.split("-")[0]);
 
       await this.click(
         "Transfer Button",
@@ -213,8 +212,7 @@ class Maybank {
     try {
       return await Promise.race([
         successful.call(this),
-        _puppeteer.errorAppear(
-          this.page,
+        this.errorAppear(
           "#root > div > div > div.notifications-wrapper > div > div"
         ),
       ]);
@@ -232,7 +230,6 @@ class Maybank {
       );
 
       await this.click(
-        this.page,
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > a > span"
       ).catch((e) => console.log(e));
     }
@@ -240,8 +237,7 @@ class Maybank {
     try {
       await Promise.race([
         successful.call(this),
-        _puppeteer.errorAppear(
-          this.page,
+        this.errorAppear(
           "#root > div > div > div.notifications-wrapper > div > div"
         ),
       ]);
@@ -259,17 +255,31 @@ class Maybank {
 
       await smsTacInput.type(tac);
 
-      await _puppeteer.click(
-        this.page,
-        "Confirm TAC Button",
+      await this.page.waitForSelector(
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > button"
       );
+
+      await this.page.click(
+        "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > button"
+      );
+
+      await this.page.waitForSelector(
+        "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div:nth-child(1) > div > div > h6:nth-child(1)"
+      );
+
+      let resultText = await this.page.evaluate(() => {
+        return document.querySelector(
+          "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div:nth-child(1) > div > div > h6:nth-child(1)"
+        ).innerText;
+      });
+
+      return resultText;
     }
+
     try {
-      await Promise.race([
+      return await Promise.race([
         successful.call(this),
-        _puppeteer.errorAppear(
-          this.page,
+        this.errorAppear(
           "#root > div > div > div.notifications-wrapper > div > div"
         ),
       ]);
@@ -277,10 +287,6 @@ class Maybank {
       console.log(e);
       throw new Error(`Maybank FillTAC: ${e.stack}`);
     }
-  }
-
-  async close() {
-    await this.browser.close();
   }
 }
 

