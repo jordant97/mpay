@@ -1,0 +1,60 @@
+.App {
+  text-align: center;
+}
+
+form {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+}
+
+.banks-option {
+  margin: 0 auto;
+  width: 600px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.bank-option-button {
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  background-color: black;
+  padding: 10px 15px;
+  color: gold;
+  cursor: pointer;
+  transition: 0.1s ease-in-out;
+  margin: 5px;
+}
+
+.amount-input {
+  height: 30px;
+  width: 200px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+}
+
+.selected {
+  background-color: gold;
+  color: black;
+}
+
+.submit-btn {
+  cursor: pointer;
+  margin: 0 auto;
+  width: 500px;
+  background-color: black;
+  padding: 10px 15px;
+  color: gold;
+  transition: 0.1s ease-in-out;
+}
+
+.submit-btn:active {
+  background-color: gold;
+  color: black;
+}

@@ -8,17 +8,14 @@ class Maybank {
     this.link = "https://maybank2u.com.my";
   }
 
-  async click(name, selector) {
-    return await Promise.race([_puppeteer.click(this.page, name, selector)]);
-  }
-
-  async init() {
+  async init(id) {
     try {
       this.browser = await puppeteer.launch({
         headless: false,
+        slowMo: 50,
       });
 
-      this.page = await this.browser.newPage();
+      this.page = await this.browser.newPage({ context: id });
 
       const headlessUserAgent = await this.page.evaluate(
         () => navigator.userAgent
@@ -46,9 +43,9 @@ class Maybank {
         }
       });
 
-      this.start = Date.now();
-
       await this.goTo();
+
+      this.start = Date.now();
     } catch (e) {
       throw `Maybank Init: ${e.stack}`;
     }
@@ -62,11 +59,10 @@ class Maybank {
     }
   }
 
-  async login(username, password) {
-    // We wrap all the successful code in a new function so we can pass it in the Promise.race
+  async fillUsername(username) {
     async function successful() {
       let usernameInput = await this.page.waitForSelector("#username");
-      await usernameInput.type(username, { delay: 50 });
+      await usernameInput.type(username);
 
       await this.page.waitFor(500);
 
@@ -87,11 +83,30 @@ class Maybank {
         "Modal Yes Button",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-6.col-md-6.col-sm-6.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
+    }
 
+    try {
+      await _puppeteer.checkExists(this.browser);
+      return await Promise.race([
+        successful.call(this),
+        _puppeteer.errorAppear(
+          this.page,
+          "#root > div > div > div.notifications-wrapper > div > div"
+        ),
+      ]);
+    } catch (e) {
+      console.log(e);
+      throw new Error(`Maybank FillUsername: ${e.stack}`);
+    }
+  }
+
+  async login(password) {
+    // We wrap all the successful code in a new function so we can pass it in the Promise.race
+    async function successful() {
       let passwordInput = await this.page.waitForSelector("#badge", {
         visible: true,
       });
-      await passwordInput.type(password, { delay: 50 });
+      await passwordInput.type(password);
 
       await _puppeteer.click(
         this.page,
@@ -152,17 +167,17 @@ class Maybank {
       let accountNumber = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(1) > div > div.col-sm-7 > input"
       );
-      await accountNumber.type("11416109364", { delay: 50 });
+      await accountNumber.type("114161093646");
 
       let transferAmount = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(2) > div > div.col-sm-7 > input"
       );
-      await transferAmount.type(this.amount, { delay: 50 });
+      await transferAmount.type(this.amount);
 
       let reference = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(4) > div > div > div.col-sm-7 > input"
       );
-      await reference.type("ReferenceNumber", { delay: 50 });
+      await reference.type("ReferenceNumber");
 
       await this.click(
         "Transfer Button",
@@ -178,9 +193,25 @@ class Maybank {
         "Request TAC",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-3.col-xs-12 > button"
       ).catch((e) => console.log(e));
+
+      await this.page.waitForSelector(
+        "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > b"
+      );
+      let details = await this.page.evaluate(() => {
+        return document.querySelector(
+          "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > b"
+        ).innerText;
+      });
+
+      let [phoneNumber, date] = details.split(/(?<=^[^ ]+) /);
+
+      return {
+        phoneNumber: phoneNumber,
+        date: date.replace("..", ""),
+      };
     }
     try {
-      await Promise.race([
+      return await Promise.race([
         successful.call(this),
         _puppeteer.errorAppear(
           this.page,
@@ -226,7 +257,7 @@ class Maybank {
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---input-wrapper---3ddmb > input"
       );
 
-      await smsTacInput.type(tac, { delay: 50 });
+      await smsTacInput.type(tac);
 
       await _puppeteer.click(
         this.page,
@@ -246,6 +277,10 @@ class Maybank {
       console.log(e);
       throw new Error(`Maybank FillTAC: ${e.stack}`);
     }
+  }
+
+  async close() {
+    await this.browser.close();
   }
 }
 

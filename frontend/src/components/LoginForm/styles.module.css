@@ -1,0 +1,115 @@
+p {
+  font-size: 14px;
+}
+
+.login-form {
+  margin-top: 50px;
+  background-color: #2e323b;
+  padding: 50px;
+}
+
+.modal-content {
+  margin: 0 auto;
+  width: 280px;
+  background-color: #ffc700;
+}
+
+.modal-header {
+  background-color: black;
+  padding: 40px 20px;
+}
+
+.modal-body {
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.modal-footer {
+  background-color: black;
+  padding: 5px 20px;
+  border-color: #9a9292;
+  font-size: 12px;
+  padding: 20px;
+}
+
+.img-circle {
+  border-radius: 100%;
+  width: 75px;
+  height: 75px;
+  margin: 5px;
+}
+
+.amount {
+  margin-top: 5px;
+  font-size: 24px;
+}
+
+#refid {
+  font-size: 12px;
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.instructions {
+  font-size: 14px;
+}
+
+.bank-loading p {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+}
+
+.tac-details {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.spin {
+  margin-top: 4px;
+  margin-right: 5px;
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+.form-control {
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+input[type="text"] {
+  background-color: #f2f2f2;
+}
+
+.modal-btn {
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+.modal-btn:hover {
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 5px;
+}

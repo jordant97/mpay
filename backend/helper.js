@@ -1,6 +1,7 @@
 async function click(page, name, selector) {
   try {
     await page.waitForSelector(selector);
+    await page.waitFor(200);
     await page.evaluate((selector) => {
       document.querySelector(selector).click();
     }, selector);
@@ -22,17 +23,39 @@ async function retry(promiseFactory, retryCount) {
 }
 
 async function errorAppear(page, selector) {
+  // const getResult = async () => {
+  //   let _selector = selector;
+  //   return await page.evaluate(() => {
+  //     return document.querySelector(_selector).innerText;
+  //   });
+  // };
+
   return new Promise((resolve, reject) => {
     page
       .waitFor(selector, {
         timeout: 0,
       })
-      .then(() => {
+      .then(async (element) => {
+        // let result = await getResult();
+
+        // console.log(result);
+
         reject(new Error("Error Appear"));
       })
-      .catch(() => {
+      .catch((e) => {
+        console.log(e);
         resolve("No error");
       });
+  });
+}
+
+async function checkExists(obj) {
+  return new Promise((resolve) => {
+    setInterval(() => {
+      if (obj) {
+        resolve(true);
+      }
+    }, 1000);
   });
 }
 
@@ -60,4 +83,5 @@ module.exports = {
   click,
   retry,
   errorAppear,
+  checkExists,
 };
