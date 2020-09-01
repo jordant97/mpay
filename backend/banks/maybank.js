@@ -16,6 +16,14 @@ class Maybank extends Bank {
       super.browser = await puppeteer.launch({
         headless: false,
         slowMo: 50,
+        args: [
+          "--no-sandbox",
+          "--disabled-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--disable-gpu",
+          "--window-size=1920x1080",
+        ],
       });
 
       super.page = await this.browser.newPage({ context: id });
@@ -51,8 +59,6 @@ class Maybank extends Bank {
       } catch (e) {
         console.log(`Session: ${id} closed`);
       }
-
-      this.start = Date.now();
     } catch (e) {
       throw e;
     }
@@ -91,7 +97,6 @@ class Maybank extends Bank {
         ),
       ]);
     } catch (e) {
-      console.log(e);
       throw new Error(`Maybank FillUsername: ${e.stack}`);
     }
   }
@@ -120,7 +125,6 @@ class Maybank extends Bank {
         ),
       ]);
     } catch (e) {
-      console.log(e);
       throw new Error(`Maybank Login: ${e.stack}`);
     }
   }
@@ -130,32 +134,32 @@ class Maybank extends Bank {
       await this.click(
         "Transfer Page Link",
         "#mainNav > div:nth-child(1) > div.col-lg-8.col-sm-7.hidden-xs > div > ul > li:nth-child(3) > a"
-      ).catch((e) => console.log(e));
+      );
 
       await this.click(
         "Close Modal Button",
         "body > div:nth-child(17) > div.fade.PromotionalModal---container---1oaNH.AnnouncementModal---announcementModal---3YygH.in.modal > div > div > div.promotional-header > button"
-      ).catch((e) => console.log(e));
+      );
 
       await this.click(
         "Transfer Tab",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.container-fluid.PayNavigation---container---3nMJB > div > div.PayNavigation---navigationContent---2M_93.col-lg-8.col-md-10.col-xs-12 > div > div:nth-child(2) > div > div"
-      ).catch((e) => console.log(e));
+      );
 
       await this.click(
         "Other Accounts Select Item",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(2) > div.hidden-xs.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > div > ul > li:nth-child(2) > a"
-      ).catch((e) => console.log(e));
+      );
 
       await this.click(
         "Other Accounts Select Item",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(2) > div.hidden-xs.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > div > ul > li:nth-child(2) > a"
-      ).catch((e) => console.log(e));
+      );
 
       await this.click(
         "Maybank / Maybank Islamic",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(3) > div.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > ul > li:nth-child(1) > a"
-      ).catch((e) => console.log(e));
+      );
 
       // Bank Transfer Modal
       await this.page.waitForSelector(
@@ -186,12 +190,12 @@ class Maybank extends Bank {
       await this.click(
         "SMS TAC",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-4.col-xs-12 > div > div.hidden-xs > div > div > ul > li:nth-child(2) > a"
-      ).catch((e) => console.log(e));
+      );
 
       await this.click(
         "Request TAC",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-3.col-xs-12 > button"
-      ).catch((e) => console.log(e));
+      );
 
       await this.page.waitForSelector(
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > b"
@@ -231,7 +235,7 @@ class Maybank extends Bank {
 
       await this.click(
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > a > span"
-      ).catch((e) => console.log(e));
+      );
     }
 
     try {

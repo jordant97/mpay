@@ -1,8 +1,11 @@
+let moment = require("moment");
+
 class Bank {
   constructor({ link, amount }) {
     this.id;
     this.browser;
     this.page;
+    this.starts = [Date.now()];
     this.link = link;
     this.amount = amount;
   }
@@ -45,12 +48,12 @@ class Bank {
       this.page
         .waitFor(selector, {
           timeout: 0,
+          visible: true,
         })
         .then(async (element) => {
           reject(new Error("Error Appear"));
         })
         .catch((e) => {
-          console.log(e);
           resolve("No error");
         });
     });
@@ -66,12 +69,24 @@ class Bank {
     });
   }
 
+  getDateStringNow() {
+    return moment().format("DD MMM YYYY, hh:mm:ss");
+  }
+
+  async addStart() {
+    this.starts.push(Date.now());
+  }
+
   async close() {
     try {
       await this.browser.close();
     } catch (e) {
       throw e;
     }
+  }
+
+  get start() {
+    return this.starts[this.starts.length - 1];
   }
 }
 

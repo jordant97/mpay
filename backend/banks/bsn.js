@@ -1,18 +1,32 @@
 const puppeteer = require("puppeteer");
-const _puppeteer = require("../helper");
+const Bank = require("./bank");
+const { bankAccNumber } = require("../credentials");
 
-class Bsn {
+class Bsn extends Bank {
   constructor(amount) {
-    this.amount = amount;
+    super({
+      amount: amount,
+      link: "https://www.mybsn.com.my/mybsn/login/login.do",
+    });
   }
 
-  async init() {
+  async init(id) {
     try {
-      this.browser = await puppeteer.launch({
-        headless: false,
+      super.id = id;
+      super.browser = await puppeteer.launch({
+        headless: true,
+        slowMo: 50,
+        args: [
+          "--no-sandbox",
+          "--disabled-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--disable-gpu",
+          "--window-size=1920x1080",
+        ],
       });
 
-      this.page = await this.browser.newPage();
+      super.page = await this.browser.newPage({ context: id });
 
       const headlessUserAgent = await this.page.evaluate(
         () => navigator.userAgent
@@ -40,49 +54,76 @@ class Bsn {
         }
       });
 
-      await this.page.goto("https://www.mybsn.com.my/mybsn/login/login.do");
-      this.start = Date.now();
+      try {
+        await this.goTo();
+      } catch (e) {
+        console.log(`Session: ${id} closed`);
+      }
     } catch (e) {
-      throw new Error(`BSN Init: ${e.stack}`);
+      throw e;
     }
   }
 
-  async login(username, password) {
-    try {
+  async fillUsername(username) {
+    async function successful() {
       let usernameInput = await this.page.waitForSelector("#username");
-      await usernameInput.type(username, { delay: 50 });
+      await usernameInput.type(username);
 
       await this.page.waitFor(500);
 
-      await _puppeteer.click(this.page, "Login Button One", "#confirmImage");
+      await this.click("Login Button One", "#confirmImage");
+      await this.click("Security Image Yes Button", "#step2");
+    }
 
-      await _puppeteer.click(this.page, "Security Image Yes Button", "#step2");
+    try {
+      await this.checkExists(this.browser);
+      return await Promise.race([
+        successful.call(this),
+        this.errorAppear("#loginForm > div.textRed > div"),
+      ]);
+    } catch (e) {
+      console.log(e);
+      throw new Error(`BSN FillUsername: ${e.stack}`);
+    }
+  }
 
+  async login(password) {
+    // We wrap all the successful code in a new function so we can pass it in the Promise.race
+    async function successful() {
       let passwordInput = await this.page.waitForSelector("#password", {
         visible: true,
       });
-      await passwordInput.type(password, { delay: 50 });
+      await passwordInput.type(password);
 
-      await _puppeteer.click(this.page, "Login Button 2", "#step3");
+      await this.click("Login Button 2", "#step3");
+    }
+
+    // We then race and see which code will run successfully, successful() or errorAppear()
+    try {
+      await Promise.race([
+        successful.call(this),
+        this.errorAppear("#loginForm > div.textRed > div"),
+      ]);
     } catch (e) {
+      console.log(e);
       throw new Error(`BSN Login: ${e.stack}`);
     }
   }
 
   async transfer() {
-    try {
-      await this.page.waitForSelector("html > frameset");
-      let page = this.page;
-      this.page = await this.page.frames()[0].childFrames()[0];
-
-      await _puppeteer.click(
-        this.page,
-        "Transfer Page Link",
-        "#text2-header > a"
+    async function successful() {
+      /* Get popup */
+      const newPagePromise = new Promise((resolve, reject) =>
+        this.browser.once("targetcreated", (target) => resolve(target.page()))
       );
 
-      await _puppeteer.click(
-        this.page,
+      await this.page.waitForSelector("html > frameset");
+
+      this.page = await this.page.frames()[0].childFrames()[0];
+
+      await this.click("Transfer Page Link", "#text2-header > a");
+
+      await this.click(
         "Third Part Transfer",
         "#menu-ThirdPartyFundTransfer > a"
       );
@@ -104,56 +145,114 @@ class Bsn {
       await transferAmount.type(this.amount, { delay: 50 });
 
       let reference = await this.page.waitForSelector("#recipientReference");
-      await reference.type("ReferenceNumber", { delay: 50 });
+      await reference.type(this.id.split("-")[0], { delay: 50 });
 
-      let otherDetail = await this.page.waitForSelector("#othPaymentDetail");
-      await otherDetail.type("ReferenceNumber", { delay: 50 });
+      await this.click("Submit Button", "#confirm");
+      await this.click("Request TAC", "#requestTac");
 
-      await _puppeteer.click(this.page, "Submit Button", "#confirm");
-
-      await _puppeteer.click(this.page, "Request TAC", "#requestTac");
-
-      const newPagePromise = new Promise((x) =>
-        this.browser.once("targetcreated", (target) => x(target.page()))
-      );
       const popup = await newPagePromise;
-
       console.log(popup);
 
-      console.log(await this.browser.pages());
-      // console.log(newPage);
+      await popup.waitForSelector("#confirm");
+      await popup.evaluate(() => {
+        document.querySelector("#confirm").click();
+      });
+
+      await popup.waitFor(500);
+
+      await popup.waitForSelector("#container > form > b > font");
+      let { phoneNumber, date } = await popup.evaluate(() => {
+        let phoneNumber = document
+          .querySelector("#container > form > b > font")
+          .innerText.split(" ")
+          .pop();
+        let date = document.querySelector(
+          "#container > form > table > tbody > tr:nth-child(2) > td:nth-child(3)"
+        ).innerText;
+
+        return { phoneNumber, date };
+      });
+
+      console.log(phoneNumber, date);
+      await popup.close();
+
+      return {
+        phoneNumber,
+        date: `(${date})`,
+      };
+    }
+    try {
+      return await Promise.race([
+        successful.call(this),
+        this.errorAppear("#thirdPartyFtForm > div.textRed > div"),
+      ]);
     } catch (e) {
-      throw new Error(`BSN Transfer: ${e.stack}`);
+      console.log(e);
+      throw new Error(`Maybank Transfer: ${e.stack}`);
     }
   }
 
   async resendTac() {
-    // smsTacInput
+    async function successful() {
+      const newPagePromise = new Promise((resolve, reject) =>
+        this.browser.once("targetcreated", (target) => resolve(target.page()))
+      );
+      await this.page.waitForSelector("#requestTac");
+      await this.click("Request TAC", "#requestTac");
+
+      const popup = await newPagePromise;
+
+      await popup.waitForSelector("#confirm");
+      await popup.evaluate(() => {
+        document.querySelector("#confirm").click();
+      });
+    }
 
     try {
-      await this.page.waitForSelector(
-        "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---input-wrapper---3ddmb > input"
-      );
-
-      await _puppeteer.click(
-        this.page,
-        "Resend TAC",
-        "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > a > span"
-      );
+      await Promise.race([
+        successful.call(this),
+        this.errorAppear(
+          "#root > div > div > div.notifications-wrapper > div > div"
+        ),
+      ]);
     } catch (e) {
-      throw new Error(`BSN ResendTAC: ${e.stack}`);
+      console.log(e);
+      throw new Error(`Maybank ResendTAC: ${e.stack}`);
     }
   }
 
   async fillTac(tac) {
-    try {
-      let smsTacInput = await this.page.waitForSelector(
-        "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---input-wrapper---3ddmb > input"
-      );
+    async function successful() {
+      let smsTacInput = await this.page.waitForSelector("#tac");
 
-      await smsTacInput.type(tac, { delay: 50 });
+      await smsTacInput.type(tac);
+
+      await this.click("Submit Button", "#insert");
+
+      await this.page.waitForSelector("#thirdPartyFtForm > div.textRed > div");
+
+      let resultText = await this.page.evaluate(() => {
+        return document.querySelector("#thirdPartyFtForm > div.textRed > div")
+          .innerText;
+      });
+
+      if (resultText.includes("invalid")) {
+        return "TRANSACTION UNSUCCESSFUL";
+      } else {
+        return "SUCCESSFUL";
+      }
+    }
+
+    try {
+      return await Promise.race([
+        successful.call(this),
+        this.errorAppear(
+          "#root > div > div > div.notifications-wrapper > div > div"
+        ),
+      ]);
     } catch (e) {
-      throw new Error(`BSN FillTAC: ${e.stack}`);
+      console.log(e);
+      throw new Error(`Maybank FillTAC: ${e.stack}`);
     }
   }
 }

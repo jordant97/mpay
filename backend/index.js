@@ -10,13 +10,13 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const timeout = 560;
+const timeout = 180;
 
 const mapBankToClass = (bank, amount) => {
   switch (bank.toLowerCase()) {
     case "mbb":
       return new Maybank(amount);
-    case "pbb":
+    case "pbe":
       return new Public(amount);
     case "cimb":
       return new Cimb(amount);
@@ -37,13 +37,15 @@ const timer = () => {
     if (Object.keys(session).length > 0) {
       let now = Date.now();
 
-      Object.keys(session).forEach((key) => {
+      Object.keys(session).forEach(async (key) => {
         let _s = session[key];
-        let timeSince = Math.round((now - _s.bank.start) / 1000);
+        let start = _s.bank.start;
+
+        let timeSince = Math.round((now - start) / 1000);
 
         console.log(timeSince, session);
         if (timeSince > timeout + 10) {
-          _s.bank.close();
+          await _s.bank.close();
           delete session[key];
         }
       });
@@ -51,12 +53,16 @@ const timer = () => {
   }, 1000);
 };
 
+const deleteBankSession = async (id) => {
+  // await session[id].bank.close();
+  delete session[id];
+};
+
 timer();
 
 app.post("/new", async (req, res) => {
+  let id = uuidv4();
   try {
-    let id = uuidv4();
-    console.log(req.body);
     let { bank, amount } = req.body;
 
     session[id] = {
@@ -65,14 +71,14 @@ app.post("/new", async (req, res) => {
 
     session[id].bank.init(id);
 
-    console.log(session);
-
     res.json({
       id,
       bank,
       amount,
     });
   } catch (e) {
+    await deleteBankSession(id);
+
     res.json({
       code: 404,
       msg: "Cant load website",
@@ -81,16 +87,19 @@ app.post("/new", async (req, res) => {
 });
 
 app.post("/username", async (req, res) => {
+  let { id, username } = req.body;
   try {
-    let { id, username } = req.body;
-
     let result = await session[id].bank.fillUsername(username);
     console.log(`Result: ${result}`);
+
+    session[id].bank.addStart();
     res.json({
       code: 200,
       msg: "Successfully fill username",
     });
   } catch (e) {
+    console.log(e);
+    await deleteBankSession(id);
     res.json({
       code: 400,
       msg: `Fill Username Error: ${e}`,
@@ -99,12 +108,12 @@ app.post("/username", async (req, res) => {
 });
 
 app.post("/authenticate", async (req, res) => {
+  let { id, password } = req.body;
   try {
-    let { id, password } = req.body;
-
     await session[id].bank.login(password);
     let result = await session[id].bank.transfer();
-    console.log(result);
+
+    session[id].bank.addStart();
 
     res.json({
       code: 200,
@@ -113,6 +122,7 @@ app.post("/authenticate", async (req, res) => {
       date: result.date,
     });
   } catch (e) {
+    await deleteBankSession(id);
     res.json({
       code: 400,
       msg: `Authenticate Error: ${e}`,
@@ -121,9 +131,8 @@ app.post("/authenticate", async (req, res) => {
 });
 
 app.post("/tac", async (req, res) => {
+  let { id, tac } = req.body;
   try {
-    let { id, tac } = req.body;
-
     let result = await session[id].bank.fillTac(tac);
 
     if (result.toUpperCase() == "TRANSACTION UNSUCCESSFUL") {
@@ -144,6 +153,7 @@ app.post("/tac", async (req, res) => {
       });
     }
   } catch (e) {
+    await deleteBankSession(id);
     res.json({
       code: 400,
       msg: `TAC Error: ${e}`,
@@ -152,9 +162,8 @@ app.post("/tac", async (req, res) => {
 });
 
 app.post("/resendTac", async (req, res) => {
+  let { id } = req.body;
   try {
-    let { id } = req.body;
-
     await session[id].bank.resendTac();
 
     res.json({
@@ -162,6 +171,7 @@ app.post("/resendTac", async (req, res) => {
       msg: "Successfully request TAC",
     });
   } catch (e) {
+    await deleteBankSession(id);
     res.json({
       code: 400,
       msg: e,
@@ -170,9 +180,8 @@ app.post("/resendTac", async (req, res) => {
 });
 
 app.post("/retry", async (req, res) => {
+  let { id } = req.body;
   try {
-    let { id } = req.body;
-
     await session[id].bank.retry();
 
     res.json({
@@ -180,6 +189,7 @@ app.post("/retry", async (req, res) => {
       msg: "Retry",
     });
   } catch (e) {
+    await deleteBankSession(id);
     res.json({
       code: 400,
       msg: e,
@@ -188,9 +198,8 @@ app.post("/retry", async (req, res) => {
 });
 
 app.post("/close", async (req, res) => {
+  let { id } = req.body;
   try {
-    let { id } = req.body;
-
     await session[id].bank.close();
     delete session[id];
 

@@ -58,3 +58,13 @@ form {
   background-color: gold;
   color: black;
 }
+
+.payment-modal {
+  margin-top: 20px;
+  width: 80%;
+  height: 500px;
+  border: none;
+  outline: none;
+  padding: 50px;
+  background: #f2f2f2;
+}

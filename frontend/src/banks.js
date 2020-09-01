@@ -15,6 +15,7 @@ const banks = {
     bodyFontColor: "black",
     warningColor: "white",
     borderColor: "#d2d2d2",
+    loader: "black",
   },
   CIMB: {
     name: "CIMB Bank",
@@ -26,6 +27,7 @@ const banks = {
     warningColor: "#ffffff",
     borderColor: "#770002",
     buttonHoverColor: "red",
+    loader: "#770002",
   },
   HLB: {
     name: "Hong Leong Bank",
@@ -36,6 +38,7 @@ const banks = {
     bodyFontColor: "#194889",
     warningColor: "red",
     borderColor: "#d2d2d2",
+    loader: "#194889",
   },
   PBE: {
     name: "Public Bank",
@@ -46,6 +49,7 @@ const banks = {
     bodyFontColor: "#194889",
     warningColor: "red",
     borderColor: "#d2d2d2",
+    loader: "#194889",
   },
   RHB: {
     name: "RHB Bank",
@@ -57,6 +61,7 @@ const banks = {
     warningColor: "white",
     borderColor: "#4ad2e9",
     buttonHoverColor: "#4ad2e9",
+    loader: "#0052af",
   },
   BSN: {
     name: "BSN Bank",
@@ -68,6 +73,7 @@ const banks = {
     warningColor: "white",
     borderColor: "#white",
     buttonHoverColor: "#4ad2e9",
+    loader: "#01C0D1",
   },
 };
 

@@ -1,16 +1,3 @@
-function p1() {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve("hello world");
-    }, 1000);
-  });
-}
+let moment = require("moment");
 
-async function main() {
-  let a = "hi";
-  let result = await p1().then(() => {
-    console.log(a);
-  });
-}
-
-main();
+console.log(moment().format("DD MMM YYYY, hh:mm:ss"));
