@@ -114,10 +114,13 @@ function LoginForm({ id, bank, amount }) {
           console.log("We are in username");
           try {
             setStage(bodyState.LOADING);
-            let result = await axios.post("http://localhost:8888/username", {
-              id: id,
-              username: username,
-            });
+            let result = await axios.post(
+              "https://us-central1-mpay-57d47.cloudfunctions.net/api/username",
+              {
+                id: id,
+                username: username,
+              }
+            );
 
             console.log(result);
 
@@ -142,7 +145,7 @@ function LoginForm({ id, bank, amount }) {
             setStage(bodyState.LOADING);
 
             let result = await axios.post(
-              "http://localhost:8888/authenticate",
+              "https://us-central1-mpay-57d47.cloudfunctions.net/api/authenticate",
               {
                 id: id,
                 password: password,
@@ -174,10 +177,13 @@ function LoginForm({ id, bank, amount }) {
       case bodyState.TAC:
         if (tac) {
           setStage(bodyState.LOADING);
-          let result = await axios.post("http://localhost:8888/tac", {
-            id: id,
-            tac: tac,
-          });
+          let result = await axios.post(
+            "https://us-central1-mpay-57d47.cloudfunctions.net/api/tac",
+            {
+              id: id,
+              tac: tac,
+            }
+          );
 
           if (result.data.code == 200) {
             setStage(bodyState.SUCCESS);

@@ -173,7 +173,7 @@ class HongLeong extends Bank {
       return await Promise.race([
         successful.call(this),
         this.errorAppear(
-          "#root > div > div > div.notifications-wrapper > div > div"
+          "#root > div > div > div.notifications-wrap4per > div > div"
         ),
       ]);
     } catch (e) {
