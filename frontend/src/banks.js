@@ -16,6 +16,8 @@ const banks = {
     warningColor: "white",
     borderColor: "#d2d2d2",
     loader: "black",
+    username: "YSCE1234",
+    password: "Live1313.",
   },
   CIMB: {
     name: "CIMB Bank",
@@ -28,6 +30,8 @@ const banks = {
     borderColor: "#770002",
     buttonHoverColor: "red",
     loader: "#770002",
+    username: "tanjason0422",
+    password: "Jasontan22*",
   },
   HLB: {
     name: "Hong Leong Bank",
@@ -39,6 +43,8 @@ const banks = {
     warningColor: "red",
     borderColor: "#d2d2d2",
     loader: "#194889",
+    username: "xinzhen1997",
+    password: "Aaaa0000@",
   },
   PBE: {
     name: "Public Bank",
@@ -50,6 +56,8 @@ const banks = {
     warningColor: "red",
     borderColor: "#d2d2d2",
     loader: "#194889",
+    username: "johndychuah",
+    password: "johndy5283",
   },
   RHB: {
     name: "RHB Bank",
@@ -62,6 +70,8 @@ const banks = {
     borderColor: "#4ad2e9",
     buttonHoverColor: "#4ad2e9",
     loader: "#0052af",
+    username: "johndychuah",
+    password: "johndy5283",
   },
   BSN: {
     name: "BSN Bank",
@@ -74,6 +84,8 @@ const banks = {
     borderColor: "#white",
     buttonHoverColor: "#4ad2e9",
     loader: "#01C0D1",
+    username: "jiasong88",
+    password: "Qwer12345",
   },
 };
 

@@ -5,12 +5,15 @@ const { v4: uuidv4 } = require("uuid");
 const { Maybank, Public, Cimb, Bsn, Rhb, HongLeong } = require("./banks");
 const session = {};
 
+const browserless = require("./banks/browserless");
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const timeout = 180;
+const port = process.env.PORT || 8888;
 
 const mapBankToClass = (bank, amount) => {
   switch (bank.toLowerCase()) {
@@ -23,7 +26,7 @@ const mapBankToClass = (bank, amount) => {
     case "bsn":
       return new Bsn(amount);
     case "rhb":
-      return new Rhb(amount);
+      return new Maybank(amount);
     case "hlb":
       return new HongLeong(amount);
     default:
@@ -43,7 +46,6 @@ const timer = () => {
 
         let timeSince = Math.round((now - start) / 1000);
 
-        console.log(timeSince, session);
         if (timeSince > timeout + 10) {
           await _s.bank.close();
           delete session[key];
@@ -54,11 +56,15 @@ const timer = () => {
 };
 
 const deleteBankSession = async (id) => {
-  // await session[id].bank.close();
+  await session[id].bank.close();
   delete session[id];
 };
 
 timer();
+
+app.post("/test", async (req, res) => {
+  browserless();
+});
 
 app.post("/new", async (req, res) => {
   let id = uuidv4();
@@ -71,13 +77,15 @@ app.post("/new", async (req, res) => {
 
     session[id].bank.init(id);
 
+    console.log(session);
+
     res.json({
       id,
       bank,
       amount,
     });
   } catch (e) {
-    await deleteBankSession(id);
+    // await deleteBankSession(id);
 
     res.json({
       code: 404,
@@ -89,8 +97,7 @@ app.post("/new", async (req, res) => {
 app.post("/username", async (req, res) => {
   let { id, username } = req.body;
   try {
-    let result = await session[id].bank.fillUsername(username);
-    console.log(`Result: ${result}`);
+    await session[id].bank.fillUsername(username);
 
     session[id].bank.addStart();
     res.json({
@@ -99,7 +106,7 @@ app.post("/username", async (req, res) => {
     });
   } catch (e) {
     console.log(e);
-    await deleteBankSession(id);
+    // await deleteBankSession(id);
     res.json({
       code: 400,
       msg: `Fill Username Error: ${e}`,
@@ -122,7 +129,7 @@ app.post("/authenticate", async (req, res) => {
       date: result.date,
     });
   } catch (e) {
-    await deleteBankSession(id);
+    // await deleteBankSession(id);
     res.json({
       code: 400,
       msg: `Authenticate Error: ${e}`,
@@ -153,7 +160,7 @@ app.post("/tac", async (req, res) => {
       });
     }
   } catch (e) {
-    await deleteBankSession(id);
+    // await deleteBankSession(id);
     res.json({
       code: 400,
       msg: `TAC Error: ${e}`,
@@ -171,7 +178,7 @@ app.post("/resendTac", async (req, res) => {
       msg: "Successfully request TAC",
     });
   } catch (e) {
-    await deleteBankSession(id);
+    // await deleteBankSession(id);
     res.json({
       code: 400,
       msg: e,
@@ -215,6 +222,6 @@ app.post("/close", async (req, res) => {
   }
 });
 
-app.listen(8888, () => {
-  console.log("The server is listening on PORT: 8888");
+app.listen(port, () => {
+  console.log(`The server is listening on PORT: ${port}`);
 });

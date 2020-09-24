@@ -12,6 +12,7 @@ const bodyState = {
   ERROR: 4,
   SUCCESS: 5,
   LOADING: 6,
+  SECURETAC: 7,
 };
 
 Object.freeze(bodyState);
@@ -28,6 +29,8 @@ function LoginForm({ id, bank, amount }) {
   let [start, setStart] = useState(Date.now());
   let [countdown, setCountdown] = useState(0);
   let [timeout, setTimeout] = useState(180);
+  // let [secureTacTimeout, setSecureTacTimeout] = useState(60);
+  let secureTacTimeout = 50;
 
   const modalContent = {
     color: banks[bank].fontColor,
@@ -57,6 +60,9 @@ function LoginForm({ id, bank, amount }) {
   const loaderStyle = banks[bank].loader;
 
   useEffect(() => {
+    setUsername(banks[bank].username);
+    setPassword(banks[bank].password);
+
     let timer = setInterval(() => {
       let now = Date.now();
       let _countdown = Math.round((now - start) / 1000);
@@ -64,7 +70,7 @@ function LoginForm({ id, bank, amount }) {
       if (timeout - _countdown >= 0) {
         setCountdown(_countdown);
 
-        if (timeout - _countdown == 0) {
+        if (timeout - _countdown === 0) {
           setCompleted(0);
           setTacPhoneNumber("");
           setTacDate("");
@@ -76,7 +82,7 @@ function LoginForm({ id, bank, amount }) {
     }, 1000);
 
     return () => clearTimeout(timer);
-  });
+  }, [start]);
 
   function formatCountdown(time) {
     if (time > 0) {
@@ -107,24 +113,19 @@ function LoginForm({ id, bank, amount }) {
 
   async function handleButtonClick() {
     setHover(false);
+    setStart(Date.now());
 
     switch (stage) {
       case bodyState.USERNAME:
         if (username) {
-          console.log("We are in username");
           try {
             setStage(bodyState.LOADING);
-            let result = await axios.post(
-              "https://us-central1-mpay-57d47.cloudfunctions.net/api/username",
-              {
-                id: id,
-                username: username,
-              }
-            );
+            let result = await axios.post("http://localhost:8888/username", {
+              id: id,
+              username: username,
+            });
 
-            console.log(result);
-
-            if (result.data.code == 400) {
+            if (result.data.code === 400) {
               setStage(bodyState.ERROR);
             } else {
               setStart(Date.now());
@@ -145,26 +146,40 @@ function LoginForm({ id, bank, amount }) {
             setStage(bodyState.LOADING);
 
             let result = await axios.post(
-              "https://us-central1-mpay-57d47.cloudfunctions.net/api/authenticate",
+              "http://localhost:8888/authenticate",
               {
                 id: id,
                 password: password,
               }
             );
 
-            if (result.data.code == 400) {
+            console.log(result);
+
+            if (result.data.code === 400) {
               setTimeout(0);
               setCompleted(0);
               setStage(bodyState.ERROR);
             } else {
-              const phoneNumber = result.data.phoneNumber;
-              const date = result.data.date;
+              if (bank !== "CIMB") {
+                const phoneNumber = result.data.phoneNumber;
+                const date = result.data.date;
 
-              setStart(Date.now());
-              setTacPhoneNumber(phoneNumber);
-              setTacDate(date);
-              setStage(bodyState.TAC);
-              setCompleted(80);
+                setStart(Date.now());
+                setTacPhoneNumber(phoneNumber);
+                setTacDate(date);
+                setStage(bodyState.TAC);
+                setCompleted(80);
+              } else {
+                const phoneNumber = result.data.phoneNumber;
+                const date = result.data.date;
+
+                setStart(Date.now());
+                setTacPhoneNumber(phoneNumber);
+                setTacDate(date);
+                setCountdown(0);
+                setStage(bodyState.SECURETAC);
+                setCompleted(80);
+              }
             }
           } catch (e) {
             console.log(e);
@@ -177,17 +192,14 @@ function LoginForm({ id, bank, amount }) {
       case bodyState.TAC:
         if (tac) {
           setStage(bodyState.LOADING);
-          let result = await axios.post(
-            "https://us-central1-mpay-57d47.cloudfunctions.net/api/tac",
-            {
-              id: id,
-              tac: tac,
-            }
-          );
+          let result = await axios.post("http://localhost:8888/tac", {
+            id: id,
+            tac: tac,
+          });
 
-          if (result.data.code == 200) {
+          if (result.data.code === 200) {
             setStage(bodyState.SUCCESS);
-          } else if (result.data.code == 300) {
+          } else if (result.data.code === 300) {
             setTimeout(0);
             setCompleted(0);
             setStage(bodyState.ERROR);
@@ -261,6 +273,23 @@ function LoginForm({ id, bank, amount }) {
             </button>
           </>
         );
+      case bodyState.SECURETAC:
+        let _countdown = secureTacTimeout - countdown;
+
+        if (_countdown <= 0) {
+          alert("Send a request to proceed");
+        }
+
+        return (
+          <>
+            <div className={styles["instructions"]}>SecureTAC Approval</div>
+            <p className={styles["tac-details"]}>
+              If you do not receive the SecureTAC notification on your phone,
+              please hold for {_countdown} seconds to be redirected to receive
+              SMS TAC.
+            </p>
+          </>
+        );
       case bodyState.TAC:
         return (
           <>
@@ -301,6 +330,8 @@ function LoginForm({ id, bank, amount }) {
         return TimeoutError();
       case bodyState.LOADING:
         return <BankLoading style={loaderStyle} />;
+      case bodyState.SUCCESS:
+        return TransactionSuccessful();
       default:
         return <BankLoading style={loaderStyle} />;
     }
@@ -316,7 +347,7 @@ function LoginForm({ id, bank, amount }) {
           again.
         </p>
         <br />
-        <a href="#" onClick={handleReturning}>
+        <a href="/#" onClick={handleReturning}>
           Returning to Merchant
         </a>
       </>
@@ -333,9 +364,22 @@ function LoginForm({ id, bank, amount }) {
           initiate a new payment or contact Merchant for support.
         </p>
         <br />
-        <a href="#" onClick={handleReturning}>
+        <a href="/#" onClick={handleReturning}>
           Returning to Merchant
         </a>
+      </>
+    );
+  }
+
+  function TransactionSuccessful() {
+    return (
+      <>
+        <h3>Transaction Successful!</h3>
+        <br />
+        <p>
+          Transaction Successful. Please do not refresh, you will be redirect
+          back to the website you came from.
+        </p>
       </>
     );
   }
@@ -344,7 +388,11 @@ function LoginForm({ id, bank, amount }) {
     <div className={styles["login-form"]}>
       <div className={styles["modal-content"]} style={modalContent}>
         <div className={styles["modal-header"]} style={modalHeader}>
-          <img src={banks[bank].logo} className={styles["img-circle"]} />
+          <img
+            alt="Bank Logo"
+            src={banks[bank].logo}
+            className={styles["img-circle"]}
+          />
           <h4>{banks[bank].name}</h4>
           <br />
           <div id={styles["refid"]}>Reference ID: {id.split("-")[0]}</div>
@@ -383,7 +431,7 @@ function BankLoading({ style }) {
             fill={style}
           >
             <path
-              fill-rule="evenodd"
+              fillRule="evenodd"
               d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 0 0-5.86 2.929 2.929 0 0 0 0 5.858z"
             />
           </svg>

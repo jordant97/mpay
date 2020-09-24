@@ -1,7 +1,8 @@
 let moment = require("moment");
 
 class Bank {
-  constructor({ link, amount }) {
+  constructor({ name, link, amount }) {
+    this.name;
     this.id;
     this.browser;
     this.page;
@@ -77,9 +78,34 @@ class Bank {
     this.starts.push(Date.now());
   }
 
+  async waitForFrame(nameOrId) {
+    return new Promise(async (resolve) => {
+      const pollingInterval = 1000;
+      const poll = setInterval(async () => {
+        const iFrame = this.page
+          .frames()
+          .find((frame) => frame.name() === nameOrId);
+        if (iFrame) {
+          clearInterval(poll);
+          resolve(iFrame);
+        }
+      }, pollingInterval);
+    });
+  }
+
   async close() {
     try {
-      await this.browser.close();
+      if (this.browser) {
+        if (process.env.NODE_ENV == "production") {
+          await this.browser.disconnect();
+        } else {
+          await this.browser.close();
+        }
+      } else {
+        await setTimeout(async () => {
+          await this.close();
+        }, 1000);
+      }
     } catch (e) {
       throw e;
     }

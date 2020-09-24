@@ -1,10 +1,10 @@
 const puppeteer = require("puppeteer");
 const Bank = require("./bank");
-const { bankAccNumber } = require("../credentials");
 
 class Bsn extends Bank {
   constructor(amount) {
     super({
+      name: "BSN",
       amount: amount,
       link: "https://www.mybsn.com.my/mybsn/login/login.do",
     });
@@ -13,20 +13,31 @@ class Bsn extends Bank {
   async init(id) {
     try {
       super.id = id;
-      super.browser = await puppeteer.launch({
-        headless: true,
-        slowMo: 50,
-        args: [
-          "--no-sandbox",
-          "--disabled-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--disable-gpu",
-          "--window-size=1920x1080",
-        ],
-      });
 
-      super.page = await this.browser.newPage({ context: id });
+      if (process.env.NODE_ENV == "production") {
+        super.browser = await puppeteer.connect({
+          browserWSEndpoint: "ws://139.59.224.25:3000",
+          slowMo: 10,
+        });
+
+        let pages = await this.browser.pages();
+        super.page = pages[0];
+      } else {
+        super.browser = await puppeteer.launch({
+          headless: false,
+          slowMo: 50,
+          args: [
+            "--no-sandbox",
+            "--disabled-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--disable-gpu",
+            "--window-size=1920x1080",
+          ],
+        });
+
+        super.page = await this.browser.newPage({ context: id });
+      }
 
       const headlessUserAgent = await this.page.evaluate(
         () => navigator.userAgent

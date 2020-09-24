@@ -24,13 +24,10 @@ function App() {
       alert("Please select required field");
     }
 
-    let result = await axios.post(
-      "https://us-central1-mpay-57d47.cloudfunctions.net/api/new",
-      {
-        bank,
-        amount,
-      }
-    );
+    let result = await axios.post("http://localhost:8888/new", {
+      bank,
+      amount,
+    });
 
     console.log(result);
 
@@ -49,12 +46,9 @@ function App() {
   const resetState = async () => {
     try {
       console.log(id);
-      await axios.post(
-        "https://us-central1-mpay-57d47.cloudfunctions.net/api/close",
-        {
-          id,
-        }
-      );
+      await axios.post("http://localhost:8888/close", {
+        id,
+      });
 
       setBank("MBB");
       setAmount("50");

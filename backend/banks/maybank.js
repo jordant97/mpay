@@ -1,10 +1,10 @@
 const puppeteer = require("puppeteer");
 const Bank = require("./bank");
-const { bankAccNumber } = require("../credentials");
 
 class Maybank extends Bank {
   constructor(amount) {
     super({
+      name: "MBB",
       amount: amount,
       link: "https://maybank2u.com.my",
     });
@@ -13,20 +13,31 @@ class Maybank extends Bank {
   async init(id) {
     try {
       super.id = id;
-      super.browser = await puppeteer.launch({
-        headless: false,
-        slowMo: 50,
-        args: [
-          "--no-sandbox",
-          "--disabled-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--disable-gpu",
-          "--window-size=1920x1080",
-        ],
-      });
 
-      super.page = await this.browser.newPage({ context: id });
+      if (process.env.NODE_ENV == "production") {
+        super.browser = await puppeteer.connect({
+          browserWSEndpoint: "ws://139.59.224.25:3000",
+          slowMo: 10,
+        });
+
+        let pages = await this.browser.pages();
+        super.page = pages[0];
+      } else {
+        super.browser = await puppeteer.launch({
+          headless: false,
+          slowMo: 50,
+          args: [
+            "--no-sandbox",
+            "--disabled-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--disable-gpu",
+            "--window-size=1920x1080",
+          ],
+        });
+
+        super.page = await this.browser.newPage({ context: id });
+      }
 
       const headlessUserAgent = await this.page.evaluate(
         () => navigator.userAgent
@@ -71,6 +82,8 @@ class Maybank extends Bank {
 
       await this.page.waitFor(500);
 
+      await this.page.screenshot({ path: "img/fillUsername.png" });
+
       await this.click(
         "Login Button One",
         "#root > div > div > div.Header---container---kBsDt > div.col-md-12 > div > div > div > div:nth-child(2) > div > div > div > div > div:nth-child(3) > button"
@@ -86,6 +99,8 @@ class Maybank extends Bank {
         "Modal Yes Button",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-6.col-md-6.col-sm-6.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
+
+      await this.page.screenshot({ path: "img/waitForPassword.png" });
     }
 
     try {
@@ -104,16 +119,23 @@ class Maybank extends Bank {
   async login(password) {
     // We wrap all the successful code in a new function so we can pass it in the Promise.race
     async function successful() {
-      let passwordInput = await this.page.waitForSelector("#badge", {
-        visible: true,
-      });
+      let passwordInput = await this.page.waitForSelector(
+        "#my-password-input",
+        {
+          visible: true,
+        }
+      );
       await passwordInput.type(password);
+
+      await this.page.screenshot({ path: "img/fillInPassword.png" });
 
       await this.click(
         "Login Button 2",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-5.col-md-5.col-sm-5.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
       await this.page.waitFor(500);
+
+      await this.page.screenshot({ path: "img/pressOnLogin.png" });
     }
 
     // We then race and see which code will run successfully, successful() or errorAppear()
@@ -125,6 +147,7 @@ class Maybank extends Bank {
         ),
       ]);
     } catch (e) {
+      await this.page.screenshot({ path: "img/loginError.png" });
       throw new Error(`Maybank Login: ${e.stack}`);
     }
   }
@@ -136,10 +159,7 @@ class Maybank extends Bank {
         "#mainNav > div:nth-child(1) > div.col-lg-8.col-sm-7.hidden-xs > div > ul > li:nth-child(3) > a"
       );
 
-      await this.click(
-        "Close Modal Button",
-        "body > div:nth-child(17) > div.fade.PromotionalModal---container---1oaNH.AnnouncementModal---announcementModal---3YygH.in.modal > div > div > div.promotional-header > button"
-      );
+      await this.click("Close Modal Button", ".promotional-close");
 
       await this.click(
         "Transfer Tab",
@@ -170,7 +190,7 @@ class Maybank extends Bank {
       let accountNumber = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(1) > div > div.col-sm-7 > input"
       );
-      await accountNumber.type(bankAccNumber);
+      await accountNumber.type("157308122114");
 
       let transferAmount = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(2) > div > div.col-sm-7 > input"
