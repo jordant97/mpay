@@ -1,13 +1,19 @@
+require("dotenv").config();
+const http = require("http");
 const express = require("express");
+const socket = require("socket.io");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
 const { Maybank, Public, Cimb, Bsn, Rhb, HongLeong } = require("./banks");
 const session = {};
 
-const browserless = require("./banks/browserless");
-
 const app = express();
+const server = http.createServer(app);
+const io = socket(server);
+
+io.on("connection", (socket) => {});
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -15,20 +21,20 @@ app.use(bodyParser.json());
 const timeout = 180;
 const port = process.env.PORT || 8888;
 
-const mapBankToClass = (bank, amount) => {
+const mapBankToClass = (io, bank, amount) => {
   switch (bank.toLowerCase()) {
     case "mbb":
-      return new Maybank(amount);
+      return new Maybank(io, amount);
     case "pbe":
-      return new Public(amount);
+      return new Public(io, amount);
     case "cimb":
-      return new Cimb(amount);
+      return new Cimb(io, amount);
     case "bsn":
-      return new Bsn(amount);
+      return new Bsn(io, amount);
     case "rhb":
-      return new Maybank(amount);
+      return new Maybank(io, amount);
     case "hlb":
-      return new HongLeong(amount);
+      return new HongLeong(io, amount);
     default:
       return {};
   }
@@ -62,8 +68,9 @@ const deleteBankSession = async (id) => {
 
 timer();
 
-app.post("/test", async (req, res) => {
-  browserless();
+app.use("/", (req, res, next) => {
+  console.log(`ip address: ${req.ip}`);
+  next();
 });
 
 app.post("/new", async (req, res) => {
@@ -72,7 +79,7 @@ app.post("/new", async (req, res) => {
     let { bank, amount } = req.body;
 
     session[id] = {
-      bank: mapBankToClass(bank, amount),
+      bank: mapBankToClass(io, bank, amount),
     };
 
     session[id].bank.init(id);
@@ -97,6 +104,7 @@ app.post("/new", async (req, res) => {
 app.post("/username", async (req, res) => {
   let { id, username } = req.body;
   try {
+    await session[id].bank.waitForBrowser();
     await session[id].bank.fillUsername(username);
 
     session[id].bank.addStart();
@@ -222,6 +230,6 @@ app.post("/close", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`The server is listening on PORT: ${port}`);
 });

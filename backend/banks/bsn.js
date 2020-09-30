@@ -2,8 +2,9 @@ const puppeteer = require("puppeteer");
 const Bank = require("./bank");
 
 class Bsn extends Bank {
-  constructor(amount) {
+  constructor(io, amount) {
     super({
+      socket: io,
       name: "BSN",
       amount: amount,
       link: "https://www.mybsn.com.my/mybsn/login/login.do",
@@ -16,8 +17,8 @@ class Bsn extends Bank {
 
       if (process.env.NODE_ENV == "production") {
         super.browser = await puppeteer.connect({
-          browserWSEndpoint: "ws://139.59.224.25:3000",
-          slowMo: 10,
+          // browserWSEndpoint: "ws://139.59.224.25:3000",
+          browserWSEndpoint: "ws://localhost:5000",
         });
 
         let pages = await this.browser.pages();
@@ -162,7 +163,6 @@ class Bsn extends Bank {
       await this.click("Request TAC", "#requestTac");
 
       const popup = await newPagePromise;
-      console.log(popup);
 
       await popup.waitForSelector("#confirm");
       await popup.evaluate(() => {

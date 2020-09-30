@@ -2,8 +2,9 @@ const puppeteer = require("puppeteer");
 const Bank = require("./bank");
 
 class Maybank extends Bank {
-  constructor(amount) {
+  constructor(io, amount) {
     super({
+      socket: io,
       name: "MBB",
       amount: amount,
       link: "https://maybank2u.com.my",
@@ -17,6 +18,7 @@ class Maybank extends Bank {
       if (process.env.NODE_ENV == "production") {
         super.browser = await puppeteer.connect({
           browserWSEndpoint: "ws://139.59.224.25:3000",
+          // browserWSEndpoint: "ws://localhost:5000"
           slowMo: 10,
         });
 
@@ -78,23 +80,28 @@ class Maybank extends Bank {
   async fillUsername(username) {
     async function successful() {
       let usernameInput = await this.page.waitForSelector("#username");
+
+      this.socket.emit("message", { type: "Entering username" });
       await usernameInput.type(username);
 
       await this.page.waitFor(500);
 
       await this.page.screenshot({ path: "img/fillUsername.png" });
 
+      this.socket.emit("message", { type: "Click on Next" });
       await this.click(
         "Login Button One",
         "#root > div > div > div.Header---container---kBsDt > div.col-md-12 > div > div > div > div:nth-child(2) > div > div > div > div > div:nth-child(3) > button"
       );
 
+      this.socket.emit("message", { type: "Waiting for modal" });
       // Wait For Modal
       await this.page.waitForSelector(
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div",
         { visible: true }
       );
 
+      this.socket.emit("message", { type: "Modal done loading" });
       await this.click(
         "Modal Yes Button",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-6.col-md-6.col-sm-6.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"

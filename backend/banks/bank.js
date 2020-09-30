@@ -1,7 +1,8 @@
 let moment = require("moment");
 
 class Bank {
-  constructor({ name, link, amount }) {
+  constructor({ socket, name, link, amount }) {
+    this.socket = socket;
     this.name;
     this.id;
     this.browser;
@@ -95,20 +96,25 @@ class Bank {
 
   async close() {
     try {
-      if (this.browser) {
-        if (process.env.NODE_ENV == "production") {
-          await this.browser.disconnect();
-        } else {
-          await this.browser.close();
-        }
+      await this.waitForBrowser();
+      if (process.env.NODE_ENV == "production") {
+        await this.browser.disconnect();
       } else {
-        await setTimeout(async () => {
-          await this.close();
-        }, 1000);
+        await this.browser.close();
       }
     } catch (e) {
       throw e;
     }
+  }
+
+  waitForBrowser() {
+    return new Promise((resolve) => {
+      let timer = setTimeout(() => {
+        if (this.browser) {
+          resolve(clearInterval(timer));
+        }
+      }, 100);
+    });
   }
 
   get start() {
