@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
 const Bank = require("./bank");
-const credentials = require("../credentials");
 
 class Cimb extends Bank {
   constructor(amount) {
@@ -177,7 +176,7 @@ class Cimb extends Bank {
       );
 
       await this.page.waitFor(1000);
-      await toAccInput.type(credentials.bankAccNumber, { delay: 50 });
+      await toAccInput.type("12313212", { delay: 50 });
 
       await this.page.waitForSelector(".select2-dropdown", {
         visible: true,

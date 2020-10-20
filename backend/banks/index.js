@@ -5,6 +5,7 @@ const Bsn = require("./bsn");
 const Rhb = require("./rhb");
 const HongLeong = require("./hongleong");
 const Bank = require("./bank");
+const data = require("./data");
 
 module.exports = {
   Maybank,
@@ -14,4 +15,5 @@ module.exports = {
   Rhb,
   HongLeong,
   Bank,
+  data,
 };

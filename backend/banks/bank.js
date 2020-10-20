@@ -1,8 +1,7 @@
 let moment = require("moment");
 
 class Bank {
-  constructor({ socket, name, link, amount }) {
-    this.socket = socket;
+  constructor({ name, link, amount }) {
     this.name;
     this.id;
     this.browser;

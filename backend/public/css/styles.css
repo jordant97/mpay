@@ -1,0 +1,404 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  /* font-family: "Roboto", sans-serif; */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.App {
+  text-align: center;
+}
+
+form {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+}
+
+.payment-modal {
+  margin-top: 20px;
+  width: 80%;
+  height: 500px;
+  border: none;
+  outline: none;
+  padding: 50px;
+  background: #f2f2f2;
+}
+
+/* Login Form */
+
+p {
+  font-size: 14px;
+}
+
+.login-form {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background-color: #2e323b;
+  padding: 50px;
+}
+
+.modal-content {
+  margin: 0 auto;
+  width: 280px;
+  text-align: center;
+}
+
+.modal-header {
+  padding: 40px 20px;
+}
+
+.modal-body {
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.modal-footer {
+  background-color: black;
+  padding: 5px 20px;
+  border-color: #9a9292;
+  font-size: 12px;
+  padding: 20px;
+}
+
+.bank-steps > * {
+  display: flex;
+  flex-direction: column;
+}
+
+.img-circle {
+  border-radius: 100%;
+  width: 75px;
+  height: 75px;
+  margin: 5px;
+}
+
+.amount {
+  margin-top: 5px;
+  font-size: 24px;
+}
+
+#refid {
+  font-size: 12px;
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.instructions {
+  font-size: 14px;
+}
+
+.bank-loading p {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+}
+
+.tac-details {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.spin {
+  margin-top: 4px;
+  margin-right: 5px;
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+.form-control {
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  margin-top: 10px;
+  background-color: #f2f2f2;
+}
+
+input.form-control {
+  outline: none;
+}
+
+input[type="text"] {
+  background-color: #f2f2f2;
+}
+
+.modal-btn {
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid black;
+  border-radius: 5px;
+  outline: none;
+}
+
+.modal-btn:hover {
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 5px;
+}
+
+/* Progress bar style */
+.progress-container {
+  height: 20px;
+  width: 100%;
+  background-color: #e0e0de;
+  margin-top: 30px;
+  margin-bottom: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #2ecc71;
+  border-radius: inherit;
+  text-align: right;
+  transition: width 1.5s ease-out;
+  width: 0%;
+}
+
+.progress-label {
+  padding: 5;
+  color: white;
+  font-weight: bold;
+}
+
+/* Maybank Styling */
+.mbb .modal-content {
+  color: #ffffff;
+  background-color: #ffc700;
+}
+
+.mbb .modal-header {
+  background-color: black;
+}
+
+.mbb .modal-body {
+  border-color: #d2d2d2;
+  color: black;
+}
+
+.mbb .modal-footer {
+  color: white;
+  background-color: black;
+}
+
+.mbb .modal-btn {
+  border-color: black;
+  color: black;
+}
+
+.mbb .modal-btn:hover {
+  border-color: white;
+  color: white;
+}
+
+.mbb .bank-loading {
+  fill: black;
+}
+
+/* BSN Styling */
+.bsn .modal-content {
+  color: #ffffff;
+  background-color: white;
+}
+
+.bsn .modal-header {
+  background-color: #01c0d1;
+}
+
+.bsn .modal-body {
+  border-color: white;
+  color: #00a2b1;
+}
+
+.bsn .modal-footer {
+  color: white;
+  background-color: #01c0d1;
+}
+
+.bsn .modal-btn {
+  border-color: #00a2b1;
+  color: #00a2b1;
+}
+
+.bsn .modal-btn:hover {
+  border-color: #4ad2e9;
+  color: #4ad2e9;
+}
+
+.bsn .bank-loading {
+  fill: #01c0d1;
+}
+
+/* CIMB Styling */
+.cimb .modal-content {
+  color: #ffffff;
+  background-color: #ffffff;
+}
+
+.cimb .modal-header {
+  background-color: #770002;
+}
+
+.cimb .modal-body {
+  border-color: #770002;
+  color: #770002;
+}
+
+.cimb .modal-footer {
+  color: white;
+  background-color: #770002;
+}
+
+.cimb .modal-btn {
+  border-color: #770002;
+  color: #770002;
+}
+
+.cimb .modal-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.cimb .bank-loading {
+  fill: #770002;
+}
+
+/* PBE */
+.pbe .modal-content {
+  color: #194889;
+  background-color: #ffffff;
+}
+
+.pbe .modal-header {
+  background-color: #f5f5f5;
+}
+
+.pbe .modal-body {
+  border-color: #d2d2d2;
+  color: #194889;
+}
+
+.pbe .modal-footer {
+  color: red;
+  background-color: #f5f5f5;
+}
+
+.pbe .modal-btn {
+  border-color: #194889;
+  color: #194889;
+}
+
+.pbe .modal-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.pbe .bank-loading {
+  fill: #194889;
+}
+
+/* HLB */
+.hlb .modal-content {
+  color: #194889;
+  background-color: #ffffff;
+}
+
+.hlb .modal-header {
+  background-color: #f5f5f5;
+}
+
+.hlb .modal-body {
+  border-color: #d2d2d2;
+  color: #194889;
+}
+
+.hlb .modal-footer {
+  color: red;
+  background-color: #f5f5f5;
+}
+
+.hlb .modal-btn {
+  border-color: #194889;
+  color: #194889;
+}
+
+.hlb .modal-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.hlb .bank-loading {
+  fill: #194889;
+}
+
+/* RHB */
+.rhb .modal-content {
+  color: white;
+  background-color: #ffffff;
+}
+
+.rhb .modal-header {
+  background-color: #0052af;
+}
+
+.rhb .modal-body {
+  border-color: #4ad2e9;
+  color: #0052af;
+}
+
+.rhb .modal-footer {
+  color: white;
+  background-color: #0052af;
+}
+
+.rhb .modal-btn {
+  border-color: #0052af;
+  color: #0052af;
+}
+
+.rhb .modal-btn:hover {
+  border-color: #4ad2e9;
+  color: #4ad2e9;
+}
+
+.rhb .bank-loading {
+  fill: #0052af;
+}

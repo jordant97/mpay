@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
 const Bank = require("./bank");
-const credentials = require("../credentials");
 
 class HongLeong extends Bank {
   constructor(amount) {
@@ -176,7 +175,7 @@ class HongLeong extends Bank {
 
       let accNumberInput = await this.page.waitForSelector("#idAcctNo");
       await accNumberInput.focus();
-      await accNumberInput.type(credentials.bankAccNumber, { delay: 50 });
+      await accNumberInput.type("12312312", { delay: 50 });
 
       let amountInput = await this.page.waitForSelector("#idAmt");
       await amountInput.focus();

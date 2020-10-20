@@ -1,18 +1,14 @@
 require("dotenv").config();
-const http = require("http");
 const express = require("express");
-const socket = require("socket.io");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
-const { Maybank, Public, Cimb, Bsn, Rhb, HongLeong } = require("./banks");
+const requestIp = require("request-ip");
+const { Maybank, Public, Cimb, Bsn, Rhb, HongLeong, data } = require("./banks");
 const session = {};
+const database = require("./database");
 
 const app = express();
-const server = http.createServer(app);
-const io = socket(server);
-
-io.on("connection", (socket) => {});
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -21,44 +17,28 @@ app.use(bodyParser.json());
 const timeout = 180;
 const port = process.env.PORT || 8888;
 
-const mapBankToClass = (io, bank, amount) => {
+const mapBankToClass = (bank, amount) => {
   switch (bank.toLowerCase()) {
     case "mbb":
-      return new Maybank(io, amount);
+      return new Maybank(amount);
     case "pbe":
-      return new Public(io, amount);
+      return new Public(amount);
     case "cimb":
-      return new Cimb(io, amount);
+      return new Cimb(amount);
     case "bsn":
-      return new Bsn(io, amount);
+      return new Bsn(amount);
     case "rhb":
-      return new Maybank(io, amount);
+      return new Maybank(amount);
     case "hlb":
-      return new HongLeong(io, amount);
+      return new HongLeong(amount);
     default:
       return {};
   }
 };
 
-const timer = () => {
-  console.log("Timer is running");
-  setInterval(() => {
-    if (Object.keys(session).length > 0) {
-      let now = Date.now();
-
-      Object.keys(session).forEach(async (key) => {
-        let _s = session[key];
-        let start = _s.bank.start;
-
-        let timeSince = Math.round((now - start) / 1000);
-
-        if (timeSince > timeout + 10) {
-          await _s.bank.close();
-          delete session[key];
-        }
-      });
-    }
-  }, 1000);
+const sessionValid = (session) => {
+  if (session.timestamp >= Date.now()) {
+  }
 };
 
 const deleteBankSession = async (id) => {
@@ -66,20 +46,62 @@ const deleteBankSession = async (id) => {
   delete session[id];
 };
 
-timer();
-
-app.use("/", (req, res, next) => {
-  console.log(`ip address: ${req.ip}`);
+app.use((req, res, next) => {
+  req.ipp = requestIp.getClientIp(res);
+  console.log(req.ip);
   next();
 });
 
+// Website
+app.get("/transaction/:id", async (req, res) => {
+  // TODO: - get transaction data from database
+
+  let bank = "MBB";
+  let id = req.params.id;
+
+  res.render("pages/index", {
+    bankVar: bank,
+    idVar: id,
+    bankName: data[bank].name,
+    imgURL: `../img/${data[bank].logo}.jpg`,
+    bankClass: bank.toLowerCase(),
+  });
+});
+
+// API
+app.get("/new", async (req, res) => {
+  let { apiKey, bank, amount, username } = req.body;
+
+  try {
+    let apiVerified = await database.verifyApi(api);
+    if (apiVerified) {
+      let transactionID = await database.newTransaction({
+        apiKey,
+        bank,
+        username,
+        amount,
+        ip: req.ip,
+      });
+
+      res.json({
+        transactionID: transactionID,
+      });
+    }
+  } catch (e) {}
+});
+
 app.post("/new", async (req, res) => {
+  res.json({ res: "Hello" });
+});
+
+app.post("/transaction/:id", async (req, res) => {
+  // check to see whether transaction exist
   let id = uuidv4();
   try {
     let { bank, amount } = req.body;
 
     session[id] = {
-      bank: mapBankToClass(io, bank, amount),
+      bank: mapBankToClass(bank, amount),
     };
 
     session[id].bank.init(id);
@@ -230,6 +252,6 @@ app.post("/close", async (req, res) => {
   }
 });
 
-server.listen(port, () => {
+app.listen(port, async () => {
   console.log(`The server is listening on PORT: ${port}`);
 });

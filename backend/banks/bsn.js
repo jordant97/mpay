@@ -2,9 +2,8 @@ const puppeteer = require("puppeteer");
 const Bank = require("./bank");
 
 class Bsn extends Bank {
-  constructor(io, amount) {
+  constructor(amount) {
     super({
-      socket: io,
       name: "BSN",
       amount: amount,
       link: "https://www.mybsn.com.my/mybsn/login/login.do",

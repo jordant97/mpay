@@ -1,14 +1,7 @@
-import maybank from "./assets/images/maybank.jpg";
-import cimb from "./assets/images/cimb.jpg";
-import hlb from "./assets/images/hlb.jpg";
-import pbe from "./assets/images/pbe.jpg";
-import rhb from "./assets/images/rhb.jpg";
-import bsn from "./assets/images/bsn.jpg";
-
 const banks = {
   MBB: {
     name: "Maybank",
-    logo: maybank,
+    logo: "maybank",
     primaryColor: "#ffc700",
     secondaryColor: "black",
     fontColor: "#ffffff",
@@ -16,12 +9,12 @@ const banks = {
     warningColor: "white",
     borderColor: "#d2d2d2",
     loader: "black",
-    username: "",
-    password: ".",
+    username: "YSCE1234",
+    password: "Live1313.",
   },
   CIMB: {
     name: "CIMB Bank",
-    logo: cimb,
+    logo: "cimb",
     primaryColor: "#ffffff",
     secondaryColor: "#770002",
     fontColor: "#ffffff",
@@ -35,7 +28,7 @@ const banks = {
   },
   HLB: {
     name: "Hong Leong Bank",
-    logo: hlb,
+    logo: "hlb",
     primaryColor: "#ffffff",
     secondaryColor: "#f5f5f5",
     fontColor: "#194889",
@@ -48,7 +41,7 @@ const banks = {
   },
   PBE: {
     name: "Public Bank",
-    logo: pbe,
+    logo: "pbe",
     primaryColor: "#ffffff",
     secondaryColor: "#f5f5f5",
     fontColor: "#194889",
@@ -61,7 +54,7 @@ const banks = {
   },
   RHB: {
     name: "RHB Bank",
-    logo: rhb,
+    logo: "rhb",
     primaryColor: "#ffffff",
     secondaryColor: "#0052af",
     fontColor: "white",
@@ -75,7 +68,7 @@ const banks = {
   },
   BSN: {
     name: "BSN Bank",
-    logo: bsn,
+    logo: "bsn",
     primaryColor: "#ffffff",
     secondaryColor: "#01C0D1",
     fontColor: "white",
@@ -89,4 +82,4 @@ const banks = {
   },
 };
 
-export default banks;
+module.exports = banks;

