@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
 import ProgressBar from "../ProgressBar";
+import Timer from "../Timer";
 import banks from "../../banks";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const bodyState = {
   USERNAME: 0,
@@ -18,6 +20,9 @@ const bodyState = {
 Object.freeze(bodyState);
 
 function LoginForm({ id, bank, amount }) {
+  let { transactionId } = useParams();
+
+  console.log(transactionId);
   let [stage, setStage] = useState(bodyState.USERNAME);
   let [completed, setCompleted] = useState(0);
   let [username, setUsername] = useState("");
@@ -28,7 +33,6 @@ function LoginForm({ id, bank, amount }) {
   let [hover, setHover] = useState(false);
   let [start, setStart] = useState(Date.now());
   let [countdown, setCountdown] = useState(0);
-  let [timeout, setTimeout] = useState(180);
   // let [secureTacTimeout, setSecureTacTimeout] = useState(60);
   let secureTacTimeout = 50;
 
@@ -62,29 +66,6 @@ function LoginForm({ id, bank, amount }) {
   useEffect(() => {
     setUsername(banks[bank].username);
     setPassword(banks[bank].password);
-
-    let timer = setInterval(() => {
-      let now = Date.now();
-      let _countdown = Math.round((now - start) / 1000);
-
-      if (timeout - _countdown >= 0) {
-        setCountdown(_countdown);
-
-        if (timeout - _countdown === 0) {
-          setCompleted(0);
-          setTacPhoneNumber("");
-          setTacDate("");
-
-          setStage(bodyState.TIMEOUT);
-          clearTimeout(timer);
-        }
-      }
-    }, 1000);
-
-    return () => {
-      console.log("Manually disconnect");
-      clearTimeout(timer);
-    };
   }, [start]);
 
   function formatCountdown(time) {
@@ -402,9 +383,7 @@ function LoginForm({ id, bank, amount }) {
           <small>Amount to charge</small>
           <h3 className={styles["amount"]}>MYR {amount}.00</h3>
           <ProgressBar bgcolor={"#2ecc71"} completed={completed} />
-          <p className={styles["stat-label"]}>
-            Session Timeout: {formatCountdown(timeout - countdown)}
-          </p>
+          <Timer timeout="180" start={start} />
         </div>
         <div className={styles["modal-body"]} style={modalBody}>
           {body(stage)}
