@@ -3,15 +3,20 @@ p {
 }
 
 .login-form {
-  margin-top: 50px;
   background-color: #2e323b;
   padding: 50px;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-content {
   margin: 0 auto;
   width: 280px;
   background-color: #ffc700;
+  text-align: center;
 }
 
 .modal-header {
@@ -108,4 +113,210 @@ input[type="text"] {
   background-color: transparent;
   border: 1px solid white;
   border-radius: 5px;
+}
+
+/* Bank Specific Styles */
+
+/* Maybank Styling */
+.mbb-modal-content {
+  color: #ffffff;
+  background-color: #ffc700;
+}
+
+.mbb-modal-header {
+  background-color: black;
+}
+
+.mbb-modal-body {
+  border-color: #d2d2d2;
+  color: black;
+}
+
+.mbb-modal-footer {
+  color: white;
+  background-color: black;
+}
+
+.mbb-modal-btn {
+  border-color: black;
+  color: black;
+}
+
+.mbb-modal-btn:hover {
+  border-color: white;
+  color: white;
+}
+
+.mbb-bank-loading {
+  fill: black;
+}
+
+/* BSN Styling */
+.bsn-modal-content {
+  color: #ffffff;
+  background-color: white;
+}
+
+.bsn-modal-header {
+  background-color: #01c0d1;
+}
+
+.bsn-modal-body {
+  border-color: white;
+  color: #00a2b1;
+}
+
+.bsn-modal-footer {
+  color: white;
+  background-color: #01c0d1;
+}
+
+.bsn-modal-btn {
+  border-color: #00a2b1;
+  color: #00a2b1;
+}
+
+.bsn-modal-btn:hover {
+  border-color: #4ad2e9;
+  color: #4ad2e9;
+}
+
+.bsn-bank-loading {
+  fill: #01c0d1;
+}
+
+/* CIMB Styling */
+.cimb-modal-content {
+  color: #ffffff;
+  background-color: #ffffff;
+}
+
+.cimb-modal-header {
+  background-color: #770002;
+}
+
+.cimb-modal-body {
+  border-color: #770002;
+  color: #770002;
+}
+
+.cimb-modal-footer {
+  color: white;
+  background-color: #770002;
+}
+
+.cimb-modal-btn {
+  border-color: #770002;
+  color: #770002;
+}
+
+.cimb-modal-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.cimb-bank-loading {
+  fill: #770002;
+}
+
+/* PBE */
+.pbe-modal-content {
+  color: #194889;
+  background-color: #ffffff;
+}
+
+.pbe-modal-header {
+  background-color: #f5f5f5;
+}
+
+.pbe-modal-body {
+  border-color: #d2d2d2;
+  color: #194889;
+}
+
+.pbe-modal-footer {
+  color: red;
+  background-color: #f5f5f5;
+}
+
+.pbe-modal-btn {
+  border-color: #194889;
+  color: #194889;
+}
+
+.pbe-modal-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.pbe-bank-loading {
+  fill: #194889;
+}
+
+/* HLB */
+.hlb-modal-content {
+  color: #194889;
+  background-color: #ffffff;
+}
+
+.hlb-modal-header {
+  background-color: #f5f5f5;
+}
+
+.hlb-modal-body {
+  border-color: #d2d2d2;
+  color: #194889;
+}
+
+.hlb-modal-footer {
+  color: red;
+  background-color: #f5f5f5;
+}
+
+.hlb-modal-btn {
+  border-color: #194889;
+  color: #194889;
+}
+
+.hlb-modal-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.hlb-bank-loading {
+  fill: #194889;
+}
+
+/* RHB */
+.rhb-modal-content {
+  color: white;
+  background-color: #ffffff;
+}
+
+.rhb-modal-header {
+  background-color: #0052af;
+}
+
+.rhb-modal-body {
+  border-color: #4ad2e9;
+  color: #0052af;
+}
+
+.rhb-modal-footer {
+  color: white;
+  background-color: #0052af;
+}
+
+.rhb-modal-btn {
+  border-color: #0052af;
+  color: #0052af;
+}
+
+.rhb-modal-btn:hover {
+  border-color: #4ad2e9;
+  color: #4ad2e9;
+}
+
+.rhb-bank-loading {
+  fill: #0052af;
 }

