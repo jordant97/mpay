@@ -3,7 +3,6 @@ import styles from "./styles.module.css";
 import ProgressBar from "../ProgressBar";
 import banks from "../../banks";
 import axios from "axios";
-import socketIOClient from "socket.io-client";
 
 const bodyState = {
   USERNAME: 0,
@@ -61,25 +60,6 @@ function LoginForm({ id, bank, amount }) {
   const loaderStyle = banks[bank].loader;
 
   useEffect(() => {
-    const socket = socketIOClient("ws://localhost:8888");
-
-    socket.on("message", (data) => {
-      switch (data.type) {
-        case "Entering username":
-          setCompleted(10);
-          break;
-        case "Click on Next":
-          setCompleted(15);
-          break;
-        case "Waiting for modal":
-          setCompleted(20);
-          break;
-        case "Modal done loading":
-          setCompleted(30);
-          break;
-      }
-    });
-
     setUsername(banks[bank].username);
     setPassword(banks[bank].password);
 
