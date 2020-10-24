@@ -6,12 +6,10 @@ class Database {
   }
 
   verifyApi = (apiKey) => this.db.verifyApi(apiKey);
-  verifyTransaction = ({ apiKey, id }) =>
-    this.db.verifyTransaction({ apiKey, id });
+  verifyTransaction = ({ id }) => this.db.verifyTransaction({ id });
   newTransaction = async ({ apiKey, username, ip, bank, amount }) =>
     this.db.newTransaction({ apiKey, username, ip, bank, amount });
-  getTransaction = async ({ apiKey, id }) =>
-    this.db.getTransaction({ apiKey, id });
+  getTransaction = async ({ id }) => this.db.getTransaction({ id });
 }
 
-module.exports = new Firebase();
+module.exports = new Database();

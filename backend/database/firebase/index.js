@@ -31,10 +31,11 @@ class Firebase {
     }
   };
 
-  verifyTransaction = async ({ apiKey, id }) => {
+  verifyTransaction = async ({ id }) => {
     try {
       let transaction = await this.firestore
-        .collection(`entities/${apiKey}/transactions/${id}`)
+        .collection(`transactions`)
+        .doc(id)
         .get();
 
       if (transaction.exists) {
@@ -54,21 +55,18 @@ class Firebase {
       let isVerified = await this.verifyApi(apiKey);
 
       if (isVerified) {
-        console.log(isVerified);
-        let result = await this.firestore
-          .collection(`entities/${apiKey}/transactions`)
-          .add({
-            entityID: apiKey,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            username,
-            bank,
-            amount,
-            onHold: false,
-            history: {
-              0: admin.firestore.FieldValue.serverTimestamp(),
-            },
-            ip,
-          });
+        let result = await this.firestore.collection(`transactions`).add({
+          entityID: apiKey,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          username,
+          bank,
+          amount,
+          onHold: false,
+          history: {
+            0: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          ip,
+        });
 
         return result.id;
       } else {

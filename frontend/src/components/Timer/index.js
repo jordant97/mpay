@@ -6,16 +6,14 @@ function Timer({ timeout, start, onTimerEnd }) {
 
   useEffect(() => {
     let timer = setInterval(() => {
-      let now = Date.now();
-      let _countdown = Math.round((now - start) / 1000);
-
-      if (timeout - _countdown >= 0) {
-        setCountdown(_countdown);
-
-        if (timeout - _countdown === 0) {
-          onTimerEnd();
-          clearTimeout(timer);
+      if (start) {
+        if (countdown <= timeout) {
+          setCountdown(Math.round((Date.now() - start) / 1000));
         }
+      } else {
+        onTimerEnd();
+        clearTimeout(timer);
+        console.log("Timer end");
       }
     }, 1000);
 

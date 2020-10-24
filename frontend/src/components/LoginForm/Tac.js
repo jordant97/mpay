@@ -1,7 +1,10 @@
-import React from "react";
+import React, {useState} from "react";
 import styles from "./styles.module.css";
 
-function Tac({ value, onValueChange, onButtonClick, tacDate, tacPhoneNumber }) {
+function Tac({ onButtonClick, tacDate, tacPhoneNumber }) {
+
+  let [value, setValue] = useState('');
+
   return (
     <>
       <div className={styles["instructions"]}>Enter the TAC</div>
@@ -9,12 +12,12 @@ function Tac({ value, onValueChange, onButtonClick, tacDate, tacPhoneNumber }) {
         className={styles["form-control"]}
         type="text"
         value={value}
-        onChange={onValueChange}
+        onChange={(e) => setValue(e.target.value)}
         required
       />
       <button
         className={`${styles["modal-btn"]} ${styles["form-control"]}`}
-        onClick={onButtonClick}
+        onClick={() => onButtonClick(value)}
       >
         Next
       </button>

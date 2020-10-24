@@ -14,6 +14,8 @@ class Bank {
   async goTo() {
     try {
       await this.page.goto(this.link);
+
+      // TODO: Update firebase with this.id 
     } catch (e) {
       throw e;
     }

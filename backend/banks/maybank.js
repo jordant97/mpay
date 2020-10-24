@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const Bank = require("./bank");
+const database = require('../database');
 
 class Maybank extends Bank {
   constructor(amount) {
@@ -84,8 +85,6 @@ class Maybank extends Bank {
 
       await this.page.waitFor(500);
 
-      await this.page.screenshot({ path: "img/fillUsername.png" });
-
       await this.click(
         "Login Button One",
         "#root > div > div > div.Header---container---kBsDt > div.col-md-12 > div > div > div > div:nth-child(2) > div > div > div > div > div:nth-child(3) > button"
@@ -101,8 +100,6 @@ class Maybank extends Bank {
         "Modal Yes Button",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-6.col-md-6.col-sm-6.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
-
-      await this.page.screenshot({ path: "img/waitForPassword.png" });
     }
 
     try {
@@ -129,15 +126,13 @@ class Maybank extends Bank {
       );
       await passwordInput.type(password);
 
-      await this.page.screenshot({ path: "img/fillInPassword.png" });
-
+    
       await this.click(
         "Login Button 2",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-5.col-md-5.col-sm-5.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
       await this.page.waitFor(500);
 
-      await this.page.screenshot({ path: "img/pressOnLogin.png" });
     }
 
     // We then race and see which code will run successfully, successful() or errorAppear()
@@ -149,7 +144,6 @@ class Maybank extends Bank {
         ),
       ]);
     } catch (e) {
-      await this.page.screenshot({ path: "img/loginError.png" });
       throw new Error(`Maybank Login: ${e.stack}`);
     }
   }

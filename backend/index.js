@@ -5,8 +5,8 @@ const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const { Maybank, Public, Cimb, Bsn, Rhb, HongLeong, data } = require("./banks");
-const session = {};
 const database = require("./database");
+const e = require("express");
 
 const app = express();
 
@@ -14,7 +14,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const timeout = 180;
+const session = {};
+
 const port = process.env.PORT || 8888;
 
 const mapBankToClass = (bank, amount) => {
@@ -28,7 +29,7 @@ const mapBankToClass = (bank, amount) => {
     case "bsn":
       return new Bsn(amount);
     case "rhb":
-      return new Maybank(amount);
+      return new Rhb(amount);
     case "hlb":
       return new HongLeong(amount);
     default:
@@ -36,8 +37,21 @@ const mapBankToClass = (bank, amount) => {
   }
 };
 
-const sessionValid = (session) => {
-  if (session.timestamp >= Date.now()) {
+const sessionValid = (id) => {
+  if (session[id]) {
+
+    console.log(session[id]);
+    if (
+      session[id].starts[session[id].starts.length - 1] + 200000 >
+      Date.now()
+    ) {
+      deleteBankSession(id);
+      return false;
+    } else {
+      return true;
+    }
+  } else {
+    return false;
   }
 };
 
@@ -52,29 +66,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Website
-app.get("/transaction/:id", async (req, res) => {
-  // TODO: - get transaction data from database
-
-  let bank = "MBB";
-  let id = req.params.id;
-
-  res.render("pages/index", {
-    bankVar: bank,
-    idVar: id,
-    bankName: data[bank].name,
-    imgURL: `../img/${data[bank].logo}.jpg`,
-    bankClass: bank.toLowerCase(),
-  });
-});
-
 // API
 app.get("/new", async (req, res) => {
   let { apiKey, bank, amount, username } = req.body;
 
   try {
-    let apiVerified = await database.verifyApi(api);
+    let apiVerified = await database.verifyApi(apiKey);
+
     if (apiVerified) {
+      console.log(apiVerified);
       let transactionID = await database.newTransaction({
         apiKey,
         bank,
@@ -84,43 +84,76 @@ app.get("/new", async (req, res) => {
       });
 
       res.json({
-        transactionID: transactionID,
+        id: transactionID,
       });
     }
   } catch (e) {}
 });
 
-app.post("/new", async (req, res) => {
-  res.json({ res: "Hello" });
-});
-
 app.post("/transaction/:id", async (req, res) => {
   // check to see whether transaction exist
-  let id = uuidv4();
+  let { id } = req.params;
+
   try {
-    let { bank, amount } = req.body;
+    let transaction = await database.verifyTransaction({ id });
 
-    session[id] = {
-      bank: mapBankToClass(bank, amount),
-    };
+    if (transaction) {
+      let { bank, amount } = transaction;
 
-    session[id].bank.init(id);
+      session[id] = {
+        bank: mapBankToClass(bank, amount),
+      };
 
-    console.log(session);
+      // Load website here
+      session[id].bank.init(id);
 
-    res.json({
-      id,
-      bank,
-      amount,
-    });
+      console.log(session);
+
+      res.json({
+        code: 200,
+        data: {
+          ...transaction,
+        },
+      });
+    } else {
+      res.json({
+        code: 400,
+      });
+      console.log("Transaction not found");
+    }
   } catch (e) {
-    // await deleteBankSession(id);
-
-    res.json({
-      code: 404,
-      msg: "Cant load website",
-    });
+    console.log(e);
   }
+
+  // try {
+  //   let transaction = database.verifyTransaction(id);
+
+  //   if (transaction) {
+  //     let { bank, amount } = transaction;
+  //   }
+  //   let { bank, amount } = req.body;
+
+  //   session[id] = {
+  //     bank: mapBankToClass(bank, amount),
+  //   };
+
+  //   session[id].bank.init(id);
+
+  //   console.log(session);
+
+  //   res.json({
+  //     id,
+  //     bank,
+  //     amount,
+  //   });
+  // } catch (e) {
+  //   // await deleteBankSession(id);
+
+  //   res.json({
+  //     code: 404,
+  //     msg: "Cant load website",
+  //   });
+  // }
 });
 
 app.post("/username", async (req, res) => {

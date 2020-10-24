@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import styles from "./styles.module.css";
 import ProgressBar from "../ProgressBar";
 import Timer from "../Timer";
 import banks from "../../banks";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
+import Firebase, { FirebaseContext } from '../Firebase';
+
+import { useDocumentData } from "react-firebase-hooks/firestore";
 
 import Loading from "./Loading";
 import Successful from "./Successful";
@@ -15,48 +18,64 @@ import Username from "./Username";
 import Password from "./Password";
 import Tac from "./Tac";
 
-function LoginForm({ id, bank, amount }) {
-  console.log(styles);
+function LoginForm() {
+  let firebase = useContext(FirebaseContext);
   let { transactionId } = useParams();
+  let [bank, setBank] = useState("BSN");
+  let [amount, setAmount] = useState(0);
 
-  console.log(transactionId);
+  let history = useHistory();
+  let [hide, setHide] = useState(true);
   let [stage, setStage] = useState(bodyState.USERNAME);
   let [completed, setCompleted] = useState(0);
-  let [username, setUsername] = useState("");
-  let [password, setPassword] = useState("");
-  let [tac, setTAC] = useState("");
   let [tacPhoneNumber, setTacPhoneNumber] = useState("");
   let [tacDate, setTacDate] = useState("");
   let [start, setStart] = useState(Date.now());
 
   useEffect(() => {
-    setUsername(banks[bank].username);
-    setPassword(banks[bank].password);
-  }, [start]);
+    verifyTransaction();
+  }, []);
 
-  function handleUsernameChange(e) {
-    setUsername(e.target.value);
+  let [transaction, loading, error] = useDocumentData(firebase.getTransactionRef(transactionId));  
+
+  useEffect(() => {
+    updateComplete();
+  }, [transaction]);
+
+  function updateComplete() {
+    if (transaction) {
+      console.log(transaction.history);
+    }
   }
 
-  function handlePasswordChange(e) {
-    setPassword(e.target.value);
+  async function verifyTransaction() {
+    let result = await axios.post(
+      `http://localhost:8888/transaction/${transactionId}`
+    );
+
+    if (result.data.code === 200) {
+      let transaction = result.data.data;
+
+      setBank(transaction.bank);
+      setAmount(transaction.amount);
+
+      setHide(false);
+    } else {
+      setHide(true);
+    }
   }
 
-  function handleTACChange(e) {
-    setTAC(e.target.value);
-  }
-
-  async function handleButtonClick() {
+  async function handleButtonClick(value) {
     setStart(Date.now());
 
     switch (stage) {
       case bodyState.USERNAME:
-        if (username) {
+        if (value) {
           try {
             setStage(bodyState.LOADING);
             let result = await axios.post("http://localhost:8888/username", {
-              id: id,
-              username: username,
+              id: transactionId,
+              username: value,
             });
 
             if (result.data.code === 400) {
@@ -75,15 +94,15 @@ function LoginForm({ id, bank, amount }) {
         }
         break;
       case bodyState.PASSWORD:
-        if (password) {
+        if (value) {
           try {
             setStage(bodyState.LOADING);
 
             let result = await axios.post(
               "http://localhost:8888/authenticate",
               {
-                id: id,
-                password: password,
+                id: transactionId,
+                password: value,
               }
             );
 
@@ -110,7 +129,7 @@ function LoginForm({ id, bank, amount }) {
                 setStart(Date.now());
                 setTacPhoneNumber(phoneNumber);
                 setTacDate(date);
-                setCountdown(0);
+
                 setCompleted(80);
               }
             }
@@ -123,11 +142,11 @@ function LoginForm({ id, bank, amount }) {
         }
         break;
       case bodyState.TAC:
-        if (tac) {
+        if (value) {
           setStage(bodyState.LOADING);
           let result = await axios.post("http://localhost:8888/tac", {
-            id: id,
-            tac: tac,
+            id: transactionId,
+            tac: value,
           });
 
           if (result.data.code === 200) {
@@ -151,7 +170,6 @@ function LoginForm({ id, bank, amount }) {
     setStage(bodyState.USERNAME);
     setTimeout(180);
     setCompleted(0);
-    setCountdown(0);
   }
 
   function body(stage) {
@@ -159,8 +177,6 @@ function LoginForm({ id, bank, amount }) {
       case bodyState.USERNAME:
         return (
           <Username
-            value={username}
-            onValueChange={handleUsernameChange}
             onButtonClick={handleButtonClick}
           />
         );
@@ -168,8 +184,7 @@ function LoginForm({ id, bank, amount }) {
       case bodyState.PASSWORD:
         return (
           <Password
-            value={password}
-            onValueChange={handlePasswordChange}
+           
             onButtonClick={handleButtonClick}
           />
         );
@@ -177,8 +192,6 @@ function LoginForm({ id, bank, amount }) {
       case bodyState.TAC:
         return (
           <Tac
-            value={tac}
-            onValueChange={handleTACChange}
             onButtonClick={handleButtonClick}
             tacDate={tacDate}
             tacPhoneNumber={tacPhoneNumber}
@@ -203,6 +216,7 @@ function LoginForm({ id, bank, amount }) {
         className={`${styles["modal-content"]} ${
           styles[`${bank.toLowerCase()}-modal-content`]
         }`}
+        hidden={hide}
       >
         <div
           className={`${styles["modal-header"]} ${
@@ -216,7 +230,7 @@ function LoginForm({ id, bank, amount }) {
           />
           <h4>{banks[bank].name}</h4>
           <br />
-          <div id={styles["refid"]}>Reference ID: {id.split("-")[0]}</div>
+          <div id={styles["refid"]}>Reference ID: {transactionId.slice(0, 10)}</div>
           <small>Amount to charge</small>
           <h3 className={styles["amount"]}>MYR {amount}.00</h3>
           <ProgressBar bgcolor={"#2ecc71"} completed={completed} />

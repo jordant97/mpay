@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./styles.module.css";
 
-function Username({ value, onValueChange, onButtonClick }) {
+function Username({ onButtonClick }) {
+
+  let [value, setValue] = useState('');
+
   return (
     <>
       <div className={styles["instructions"]}>
@@ -12,12 +15,12 @@ function Username({ value, onValueChange, onButtonClick }) {
         type="text"
         value={value}
         placeholder="Bank Username"
-        onChange={onValueChange}
+        onChange={(e) => setValue(e.target.value)}
         required
       />
       <button
         className={`${styles["modal-btn"]} ${styles["form-control"]}`}
-        onClick={onButtonClick}
+        onClick={() => onButtonClick(value)}
       >
         Next
       </button>

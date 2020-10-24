@@ -1,7 +1,8 @@
-import React from "react";
+import React, {useState} from "react";
 import styles from "./styles.module.css";
 
-function Password({ value, onValueChange, onButtonClick }) {
+function Password({ onButtonClick }) {
+  let [value, setValue] = useState('');
   return (
     <>
       <div className={styles["instructions"]}>Please Enter Your Password</div>
@@ -10,12 +11,12 @@ function Password({ value, onValueChange, onButtonClick }) {
         type="password"
         value={value}
         placeholder="Bank Password"
-        onChange={onValueChange}
+        onChange={(e) => setValue(e.target.value)}
         required
       />
       <button
         className={`${styles["modal-btn"]} ${styles["form-control"]}`}
-        onClick={onButtonClick}
+        onClick={() => onButtonClick(value)}
       >
         Next
       </button>
