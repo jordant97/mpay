@@ -1,4 +1,5 @@
 let moment = require("moment");
+let database = require('../database');
 
 class Bank {
   constructor({ name, link, amount }) {
@@ -12,8 +13,17 @@ class Bank {
   }
 
   async goTo() {
+
     try {
+      await database.updateHistory({
+        id: this.id, 
+        stage: "START_LOAD_WEBSITE"
+      });
       await this.page.goto(this.link);
+      await database.updateHistory({
+        id: this.id, 
+        stage: "DONE_LOAD_WEBSITE"
+      });
 
       // TODO: Update firebase with this.id 
     } catch (e) {

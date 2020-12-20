@@ -66,8 +66,11 @@ class Public extends Bank {
       });
 
       try {
+        console.log("Start load website");
         await this.goTo();
+        console.log("Done load website");
       } catch (e) {
+        console.log(e);
         console.log(`Session: ${id} closed`);
       }
     } catch (e) {

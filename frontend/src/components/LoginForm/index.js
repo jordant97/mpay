@@ -5,7 +5,7 @@ import Timer from "../Timer";
 import banks from "../../banks";
 import axios from "axios";
 import { useParams, useHistory } from "react-router-dom";
-import Firebase, { FirebaseContext } from '../Firebase';
+import Firebase, { FirebaseContext } from "../Firebase";
 
 import { useDocumentData } from "react-firebase-hooks/firestore";
 
@@ -30,21 +30,71 @@ function LoginForm() {
   let [completed, setCompleted] = useState(0);
   let [tacPhoneNumber, setTacPhoneNumber] = useState("");
   let [tacDate, setTacDate] = useState("");
-  let [start, setStart] = useState(Date.now());
+  let [start, setStart] = useState(null);
+  let [error, setError] = useState(null);
 
   useEffect(() => {
     verifyTransaction();
   }, []);
 
-  let [transaction, loading, error] = useDocumentData(firebase.getTransactionRef(transactionId));  
+  let [transaction, loading, firebaseError] = useDocumentData(
+    firebase.getTransactionRef(transactionId)
+  );
+
+  console.log(transactionId);
+
+  console.log(transaction, loading, firebaseError);
 
   useEffect(() => {
-    updateComplete();
+    console.log("Update completeness");
+    updateCompleteness();
   }, [transaction]);
 
-  function updateComplete() {
+  function updateCompleteness() {
     if (transaction) {
-      console.log(transaction.history);
+      console.log(transaction);
+      switch (
+        Object.keys(transaction.history[transaction.history.length - 1])[0]
+      ) {
+        case "START_CHECK_WEBSITE":
+          setCompleted(5);
+          break;
+        case "DONE_CHECK_WEBSITE":
+          setCompleted(10);
+          break;
+        case "START_FILL_USERNAME":
+          setCompleted(15);
+          break;
+        case "DONE_FILL_USERNAME":
+          setCompleted(25);
+          break;
+        case "DONE_CLICK_MODAL":
+          setCompleted(40);
+          break;
+        case "START_FILL_PASSWORD":
+          setCompleted(45);
+          break;
+        case "DONE_FILL_PASSWORD":
+          setCompleted(50);
+          break;
+        case "START_FILL_TRANSFER":
+          setCompleted(60);
+          break;
+        case "START_REQUEST_TAC":
+          setCompleted(65);
+          break;
+        case "DONE_REQUEST_TAC":
+          setCompleted(70);
+          break;
+        case "START_FILL_TAC":
+          setCompleted(75);
+          break;
+        case "DONE_FILL_TAC":
+          setCompleted(80);
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -56,10 +106,18 @@ function LoginForm() {
     if (result.data.code === 200) {
       let transaction = result.data.data;
 
-      setBank(transaction.bank);
-      setAmount(transaction.amount);
+      if (transaction.history[0]["INIT"] + 180000 >= Date.now()) {
+        console.log(transaction.history[0]["INIT"]);
 
-      setHide(false);
+        setBank(transaction.bank);
+        setAmount(transaction.amount);
+        setStart(Date.now());
+
+        setHide(false);
+      } else {
+        setStart(null);
+        setError("SESSION_EXPIRED");
+      }
     } else {
       setHide(true);
     }
@@ -83,6 +141,8 @@ function LoginForm() {
             } else {
               setStart(Date.now());
               setStage(bodyState.PASSWORD);
+
+              console.log("Set completed 40");
 
               setCompleted(40);
             }
@@ -109,7 +169,6 @@ function LoginForm() {
             console.log(result);
 
             if (result.data.code === 400) {
-              setTimeout(0);
               setCompleted(0);
               setStage(bodyState.ERROR);
             } else {
@@ -152,7 +211,6 @@ function LoginForm() {
           if (result.data.code === 200) {
             setStage(bodyState.SUCCESS);
           } else if (result.data.code === 300) {
-            setTimeout(0);
             setCompleted(0);
             setStage(bodyState.ERROR);
           }
@@ -168,26 +226,16 @@ function LoginForm() {
     e.preventDefault();
 
     setStage(bodyState.USERNAME);
-    setTimeout(180);
     setCompleted(0);
   }
 
   function body(stage) {
     switch (stage) {
       case bodyState.USERNAME:
-        return (
-          <Username
-            onButtonClick={handleButtonClick}
-          />
-        );
+        return <Username onButtonClick={handleButtonClick} />;
 
       case bodyState.PASSWORD:
-        return (
-          <Password
-           
-            onButtonClick={handleButtonClick}
-          />
-        );
+        return <Password onButtonClick={handleButtonClick} />;
 
       case bodyState.TAC:
         return (
@@ -230,7 +278,9 @@ function LoginForm() {
           />
           <h4>{banks[bank].name}</h4>
           <br />
-          <div id={styles["refid"]}>Reference ID: {transactionId.slice(0, 10)}</div>
+          <div id={styles["refid"]}>
+            Reference ID: {transactionId.slice(0, 10)}
+          </div>
           <small>Amount to charge</small>
           <h3 className={styles["amount"]}>MYR {amount}.00</h3>
           <ProgressBar bgcolor={"#2ecc71"} completed={completed} />
@@ -238,7 +288,8 @@ function LoginForm() {
             timeout="180"
             start={start}
             onTimerEnd={() => {
-              console.log("Timer end");
+              setCompleted(0);
+              setStage(bodyState.TIMEOUT);
             }}
           />
         </div>

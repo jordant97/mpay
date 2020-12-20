@@ -1,26 +1,28 @@
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
+import useInterval from "../../hooks/useInterval";
 
 function Timer({ timeout, start, onTimerEnd }) {
   let [countdown, setCountdown] = useState(0);
+  let [isRunning, setRunning] = useState(true);
 
-  useEffect(() => {
-    let timer = setInterval(() => {
+  useInterval(
+    () => {
       if (start) {
-        if (countdown <= timeout) {
+        if (countdown < timeout) {
           setCountdown(Math.round((Date.now() - start) / 1000));
+        } else {
+          onTimerEnd();
+          setRunning(false);
+          console.log("Timer end");
         }
       } else {
-        onTimerEnd();
-        clearTimeout(timer);
-        console.log("Timer end");
+        setRunning(false);
+        console.log("Expired");
       }
-    }, 1000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [start]);
+    },
+    isRunning ? 1000 : null
+  );
 
   function formatCountdown(time) {
     if (time > 0) {

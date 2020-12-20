@@ -1,6 +1,6 @@
 const puppeteer = require("puppeteer");
 const Bank = require("./bank");
-const database = require('../database');
+const database = require("../database");
 
 class Maybank extends Bank {
   constructor(amount) {
@@ -53,20 +53,6 @@ class Maybank extends Bank {
         "accept-language": "en-US,en;q=0.8",
       });
 
-      await this.page.setRequestInterception(true);
-
-      this.page.on("request", (req) => {
-        if (
-          req.resourceType() == "stylesheet" ||
-          req.resourceType() == "font" ||
-          req.resourceType() == "image"
-        ) {
-          req.abort();
-        } else {
-          req.continue();
-        }
-      });
-
       try {
         await this.goTo();
       } catch (e) {
@@ -81,6 +67,11 @@ class Maybank extends Bank {
     async function successful() {
       let usernameInput = await this.page.waitForSelector("#username");
 
+      await database.updateHistory({
+        id: this.id,
+        stage: "START_FILL_USERNAME",
+      });
+
       await usernameInput.type(username);
 
       await this.page.waitFor(500);
@@ -89,6 +80,11 @@ class Maybank extends Bank {
         "Login Button One",
         "#root > div > div > div.Header---container---kBsDt > div.col-md-12 > div > div > div > div:nth-child(2) > div > div > div > div > div:nth-child(3) > button"
       );
+
+      await database.updateHistory({
+        id: this.id,
+        stage: "DONE_FILL_USERNAME",
+      });
 
       // Wait For Modal
       await this.page.waitForSelector(
@@ -100,10 +96,23 @@ class Maybank extends Bank {
         "Modal Yes Button",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-6.col-md-6.col-sm-6.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
+
+      await database.updateHistory({
+        id: this.id,
+        stage: "DONE_CLICK_MODAL",
+      });
     }
 
     try {
+      await database.updateHistory({
+        id: this.id,
+        stage: "START_CHECK_WEBSITE",
+      });
       await this.checkExists(this.browser);
+      await database.updateHistory({
+        id: this.id,
+        stage: "DONE_CHECK_WEBSITE",
+      });
       return await Promise.race([
         successful.call(this),
         this.errorAppear(
@@ -118,6 +127,10 @@ class Maybank extends Bank {
   async login(password) {
     // We wrap all the successful code in a new function so we can pass it in the Promise.race
     async function successful() {
+      await database.updateHistory({
+        id: this.id,
+        stage: "START_FILL_PASSWORD",
+      });
       let passwordInput = await this.page.waitForSelector(
         "#my-password-input",
         {
@@ -126,13 +139,17 @@ class Maybank extends Bank {
       );
       await passwordInput.type(password);
 
-    
       await this.click(
         "Login Button 2",
         "#root > div > div > div.Header---container---kBsDt > div:nth-child(2) > div > div > div > div > div:nth-child(2) > div.modal-footer > div > div.col-lg-5.col-md-5.col-sm-5.col-xs-12.SecurityPhrase---right-btn-container---32k8- > button"
       );
-      await this.page.waitFor(500);
 
+      await database.updateHistory({
+        id: this.id,
+        stage: "DONE_FILL_PASSWORD",
+      });
+
+      await this.page.waitFor(500);
     }
 
     // We then race and see which code will run successfully, successful() or errorAppear()
@@ -164,12 +181,7 @@ class Maybank extends Bank {
 
       await this.click(
         "Other Accounts Select Item",
-        "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(2) > div.hidden-xs.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > div > ul > li:nth-child(2) > a"
-      );
-
-      await this.click(
-        "Other Accounts Select Item",
-        "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(2) > div.hidden-xs.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > div > ul > li:nth-child(2) > a"
+        "#scrollToTransactions > div.Transactions---container---3sqaa > div:nth-child(1) > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj > div > div > div:nth-child(2) > div.Transactions---backgroundTile---JsrKN > div > div > div.col-xs-12.col-lg-8.col-md-10 > div:nth-child(2) > div.hidden-xs.col-sm-10.col-xs-12.PayFromToContainer---dropdownHolder---1fWw2 > div > div > ul > li:nth-child(3) > a"
       );
 
       await this.click(
@@ -182,6 +194,13 @@ class Maybank extends Bank {
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div",
         { visible: true }
       );
+
+      await database.updateHistory({
+        id: this.id,
+        stage: "START_FILL_TRANSFER",
+      });
+
+      // get bank details
 
       let accountNumber = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(1) > div:nth-child(1) > div > div.col-sm-7 > input"
@@ -196,7 +215,7 @@ class Maybank extends Bank {
       let reference = await this.page.waitForSelector(
         "#scrollToTransactions > div:nth-child(1) > div > div > div > div > div.undefined.modal-body > div > div:nth-child(4) > div > div > div.col-sm-7 > input"
       );
-      await reference.type(this.id.split("-")[0]);
+      await reference.type(this.id.split("-")[0].slice(0, 6));
 
       await this.click(
         "Transfer Button",
@@ -207,6 +226,11 @@ class Maybank extends Bank {
         "SMS TAC",
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div.col-sm-4.col-xs-12 > div > div.hidden-xs > div > div > ul > li:nth-child(2) > a"
       );
+
+      await database.updateHistory({
+        id: this.id,
+        stage: "START_REQUEST_TAC",
+      });
 
       await this.click(
         "Request TAC",
@@ -220,6 +244,11 @@ class Maybank extends Bank {
         return document.querySelector(
           "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---text_confirm---1Uo-m > p > b"
         ).innerText;
+      });
+
+      await database.updateHistory({
+        id: this.id,
+        stage: "DONE_REQUEST_TAC",
       });
 
       let [phoneNumber, date] = details.split(/(?<=^[^ ]+) /);
@@ -269,6 +298,11 @@ class Maybank extends Bank {
 
   async fillTac(tac) {
     async function successful() {
+      await database.updateHistory({
+        id: this.id,
+        stage: "START_FILL_TAC",
+      });
+
       let smsTacInput = await this.page.waitForSelector(
         "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div.col-md-10.col-xs-12 > div > div > div.col-lg-8.col-md-9.col-sm-8.col-xs-12.confirm-area.OneTimePassword---alignOTPContent---3Gxqm > div.OneTimePassword---input-wrapper---3ddmb > input"
       );
@@ -291,6 +325,11 @@ class Maybank extends Bank {
         return document.querySelector(
           "#scrollToTransactions > div.Transactions---container---3sqaa > div.Transactions---content---2P7lC > div.Transactions---withSide---2taIP.container-fluid.Transactions---summaryContainer---1rNvj.undefined > div > div > div.Transactions---stickyConfirmation---2aISx > div > div > div > div > div > div.col-md-8.col-xs-12 > div > div > div:nth-child(1) > div > div > h6:nth-child(1)"
         ).innerText;
+      });
+
+      await database.updateHistory({
+        id: this.id,
+        stage: "DONE_FILL_TAC",
       });
 
       return resultText;

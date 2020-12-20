@@ -39,7 +39,6 @@ const mapBankToClass = (bank, amount) => {
 
 const sessionValid = (id) => {
   if (session[id]) {
-
     console.log(session[id]);
     if (
       session[id].starts[session[id].starts.length - 1] + 200000 >
@@ -98,7 +97,9 @@ app.post("/transaction/:id", async (req, res) => {
     let transaction = await database.verifyTransaction({ id });
 
     if (transaction) {
-      let { bank, amount } = transaction;
+      let { bank, amount, history } = transaction;
+
+      console.log(history[0]["INIT"]);
 
       session[id] = {
         bank: mapBankToClass(bank, amount),
@@ -287,4 +288,13 @@ app.post("/close", async (req, res) => {
 
 app.listen(port, async () => {
   console.log(`The server is listening on PORT: ${port}`);
+  let id = await database.newTransaction({
+    username: "test123",
+    amount: "1",
+    bank: "MBB",
+    apiKey: "XUE5M1z7GMpQV4jQ3Vq1",
+    ip: "12312313",
+  });
+
+  console.log(id);
 });

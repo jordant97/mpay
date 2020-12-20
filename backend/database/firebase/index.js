@@ -33,10 +33,7 @@ class Firebase {
 
   verifyTransaction = async ({ id }) => {
     try {
-      let transaction = await this.firestore
-        .collection(`transactions`)
-        .doc(id)
-        .get();
+      let transaction = await this.getTransaction(id);
 
       if (transaction.exists) {
         return {
@@ -54,17 +51,22 @@ class Firebase {
     try {
       let isVerified = await this.verifyApi(apiKey);
 
+      console.log(isVerified);
+
       if (isVerified) {
+        let now = Date.now();
         let result = await this.firestore.collection(`transactions`).add({
           entityID: apiKey,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: now,
           username,
           bank,
           amount,
           onHold: false,
-          history: {
-            0: admin.firestore.FieldValue.serverTimestamp(),
-          },
+          history: [
+            {
+              INIT: now,
+            },
+          ],
           ip,
         });
 
@@ -77,18 +79,36 @@ class Firebase {
     }
   };
 
-  getTransaction = async ({ apiKey, id }) => {
+  getTransaction = async (id) => {
     let transaction = await this.firestore
-      .collection(`entities/${apiKey}/transactions`)
+      .collection(`transactions`)
       .doc(id)
       .get();
-
-    return transaction.data();
+    return transaction;
   };
 
-  subscribeToTransaction = async (transactionID) => {};
+  getTransactionRef = async (id) => {
+    let reference = await this.firestore.collection(`transactions`).doc(id);
+    return reference;
+  };
 
-  updateTransction = async (transactionID) => {};
+  updateHistory = async ({ id, stage }) => {
+    this.updateTransaction({
+      id,
+      data: {
+        history: admin.firestore.FieldValue.arrayUnion({
+          [stage]: Date.now(),
+        }),
+      },
+    });
+  };
+
+  updateTransaction = async ({ id, data }) => {
+    let ref = await this.firestore
+      .collection("transactions")
+      .doc(id)
+      .update(data);
+  };
 }
 
 module.exports = Firebase;
